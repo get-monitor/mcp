@@ -2,6 +2,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { GetMonitorClient } from './client/api-client.js';
 import { registerStatusPageTools } from './tools/status-pages.js';
+import { registerMonitorTools } from './tools/monitors.js';
 
 export function createServer(client: GetMonitorClient): McpServer {
   const server = new McpServer({
@@ -9,5 +10,6 @@ export function createServer(client: GetMonitorClient): McpServer {
     version: '0.1.0',
   });
   registerStatusPageTools(server, client);
+  registerMonitorTools(server, client);
   return server;
 }
