@@ -1,5 +1,5 @@
 {
-  "name": "@statuspageone/mcp",
+  "name": "@getmonitor/mcp",
   "version": "0.1.0",
   "description": "GetMonitor MCP server — connects AI assistants to your monitors, status pages, incidents, and on-call workflows",
   "license": "MIT",
