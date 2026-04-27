@@ -7,14 +7,6 @@
   "bin": {
     "getmonitor-mcp": "./dist/stdio.js"
   },
-  "main": "./dist/stdio.cjs",
-  "module": "./dist/stdio.js",
-  "exports": {
-    ".": {
-      "import": "./dist/stdio.js",
-      "require": "./dist/stdio.cjs"
-    }
-  },
   "files": ["dist"],
   "scripts": {
     "build": "tsup",

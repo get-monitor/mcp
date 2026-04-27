@@ -5,3 +5,6 @@ tsup.config.ts
 vitest.config.ts
 Dockerfile
 docs/
+pnpm-lock.yaml
+.gitignore
+.npmignore
