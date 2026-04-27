@@ -11,8 +11,7 @@ function formatMonitor(m: Record<string, unknown>): string {
   return [
     `ID: ${m.id}`,
     `Name: ${m.name}`,
-    m.type ? `Type: ${m.type}` : null,
-    `Status: ${m.currentStatus}`,
+    `Status: ${m.status}`,
   ].filter(Boolean).join('\n');
 }
 
@@ -45,11 +44,11 @@ export function registerMonitorTools(server: McpServer, client: GetMonitorClient
 
   server.tool(
     'get_monitor_aggregations',
-    'Get hourly uptime aggregations for a specific monitor on a given date',
+    'Get hourly uptime aggregations (per region) for a specific monitor on a given date',
     {
-      statusPageId: z.string(),
-      monitorId: z.string(),
-      date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).describe('Date in YYYY-MM-DD format'),
+      statusPageId: z.string().describe('Status page ID'),
+      monitorId: z.string().describe('Monitor ID'),
+      date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).describe('Date in YYYY-MM-DD format, e.g. 2024-01-15'),
     },
     ({ statusPageId, monitorId, date }) => getMonitorAggregations(client, statusPageId, monitorId, date),
   );

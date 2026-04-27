@@ -8,6 +8,8 @@ function text(t: string): ToolResponse {
 }
 
 function formatIncident(i: Record<string, unknown>): string {
+  const updates = (i.updates as unknown[]) ?? [];
+  const affected = (i.affectedMonitors as unknown[]) ?? [];
   return [
     `ID: ${i.id}`,
     `Title: ${i.title}`,
@@ -15,7 +17,18 @@ function formatIncident(i: Record<string, unknown>): string {
     `Status: ${i.status}`,
     `Started: ${i.startedAt}`,
     i.resolvedAt ? `Resolved: ${i.resolvedAt}` : null,
+    i.description ? `Description: ${i.description}` : null,
+    affected.length > 0 ? `Affected monitors: ${affected.length}` : null,
+    updates.length > 0 ? `Updates: ${updates.length}` : null,
   ].filter(Boolean).join('\n');
+}
+
+interface IncidentListResponse {
+  items: Record<string, unknown>[];
+  page: number;
+  limit: number;
+  total: number;
+  hasMore: boolean;
 }
 
 export async function listIncidents(
@@ -23,7 +36,7 @@ export async function listIncidents(
   statusPageId: string,
   params: { status?: string; page?: number; limit?: number },
 ): Promise<ToolResponse> {
-  const data = await client.get<{ data?: Record<string, unknown>[] } | Record<string, unknown>[]>(
+  const data = await client.get<IncidentListResponse>(
     `/api/v1/status-pages/${statusPageId}/incidents`,
     {
       status: params.status,
@@ -31,9 +44,10 @@ export async function listIncidents(
       limit: params.limit?.toString(),
     },
   );
-  const items = Array.isArray(data) ? data : ((data as { data?: Record<string, unknown>[] }).data ?? []);
+  const items = data.items ?? [];
   if (items.length === 0) return text('No incidents found.');
-  return text(items.map(formatIncident).join('\n\n---\n\n'));
+  const footer = `\n\nPage ${data.page} of ${Math.ceil(data.total / data.limit)} (${data.total} total)`;
+  return text(items.map(formatIncident).join('\n\n---\n\n') + footer);
 }
 
 export async function getIncident(
@@ -50,20 +64,24 @@ export async function getIncident(
 export function registerIncidentTools(server: McpServer, client: GetMonitorClient): void {
   server.tool(
     'list_incidents',
-    'List incidents for a status page, optionally filtered by status',
+    'List incidents for a status page, optionally filtered by status. Returns paginated results with total count.',
     {
       statusPageId: z.string().describe('Status page ID'),
-      status: z.enum(['investigating', 'identified', 'monitoring', 'resolved']).optional(),
-      page: z.number().int().positive().optional(),
-      limit: z.number().int().min(1).max(100).optional(),
+      status: z.enum(['investigating', 'identified', 'monitoring', 'resolved']).optional()
+        .describe('Filter by incident status'),
+      page: z.number().int().positive().default(1).optional().describe('Page number (default 1)'),
+      limit: z.number().int().min(1).max(100).default(20).optional().describe('Results per page (default 20, max 100)'),
     },
     ({ statusPageId, ...params }) => listIncidents(client, statusPageId, params),
   );
 
   server.tool(
     'get_incident',
-    'Get a specific incident by ID, including all status updates',
-    { statusPageId: z.string(), incidentId: z.string() },
+    'Get a specific incident by ID, including all status updates and affected monitors',
+    {
+      statusPageId: z.string().describe('Status page ID'),
+      incidentId: z.string().describe('Incident ID'),
+    },
     ({ statusPageId, incidentId }) => getIncident(client, statusPageId, incidentId),
   );
 }

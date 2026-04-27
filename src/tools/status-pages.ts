@@ -19,9 +19,23 @@ export async function resolveStatusPage(
   return text(JSON.stringify(data, null, 2));
 }
 
+interface StatusPageStatusResponse {
+  status: 'operational' | 'degraded' | 'major_outage' | 'unknown';
+  message: string;
+  activeIncident: { id: string; title: string; status: string; severity: string; updatedAt: string } | null;
+}
+
 export async function getStatusPageStatus(client: GetMonitorClient, id: string): Promise<ToolResponse> {
-  const data = await client.get<{ status: string }>(`/api/v1/status-pages/${id}/status`);
-  return text(`Status Page ${id}: ${data.status}`);
+  const data = await client.get<StatusPageStatusResponse>(`/api/v1/status-pages/${id}/status`);
+  const lines = [
+    `Status: ${data.status}`,
+    `Message: ${data.message}`,
+  ];
+  if (data.activeIncident) {
+    const i = data.activeIncident;
+    lines.push(`Active Incident: [${i.severity}] ${i.title} (${i.status}) — ID: ${i.id}`);
+  }
+  return text(lines.join('\n'));
 }
 
 export async function getStatusPageComponents(
@@ -71,21 +85,21 @@ export function registerStatusPageTools(server: McpServer, client: GetMonitorCli
 
   server.tool(
     'get_status_page_components',
-    'Get the component tree for a status page with uptime percentages',
+    'Get the component tree for a status page with uptime percentages and status history. Components may be monitors, static components, or groups.',
     {
       id: z.string().describe('Status page ID'),
-      days: z.number().int().positive().optional().describe('Number of days of uptime history'),
+      days: z.number().int().min(1).optional().describe('Days of uptime history to include (default 60)'),
     },
     ({ id, days }) => getStatusPageComponents(client, id, days),
   );
 
   server.tool(
     'list_status_updates',
-    'Get recent public status updates posted on a status page',
+    'Get a paginated feed of incident and maintenance status updates for a status page, ordered by most recent first.',
     {
       id: z.string().describe('Status page ID'),
-      page: z.number().int().positive().optional(),
-      limit: z.number().int().min(1).max(100).optional(),
+      page: z.number().int().positive().default(1).optional().describe('Page number (default 1)'),
+      limit: z.number().int().min(1).max(100).default(20).optional().describe('Results per page (default 20)'),
     },
     ({ id, ...params }) => listStatusUpdates(client, id, params),
   );
