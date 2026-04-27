@@ -9,6 +9,7 @@ function mockFetch(body: unknown, status = 200) {
   return vi.fn().mockResolvedValue({
     ok: status >= 200 && status < 300,
     status,
+    headers: { get: () => null },
     json: () => Promise.resolve(body),
   });
 }
@@ -24,7 +25,7 @@ describe('GetMonitorClient', () => {
     vi.unstubAllGlobals();
   });
 
-  it('sends Bearer token in Authorization header', async () => {
+  it('sends Bearer token in Authorization header when token provided', async () => {
     const fetchMock = mockFetch({ id: '1', name: 'Test' });
     vi.stubGlobal('fetch', fetchMock);
     await client.get('/v1/monitors');
@@ -34,6 +35,15 @@ describe('GetMonitorClient', () => {
         headers: expect.objectContaining({ Authorization: `Bearer ${TOKEN}` }),
       }),
     );
+  });
+
+  it('does not send Authorization header when no token provided', async () => {
+    const noTokenClient = new GetMonitorClient({ baseUrl: BASE });
+    const fetchMock = mockFetch({ id: '1' });
+    vi.stubGlobal('fetch', fetchMock);
+    await noTokenClient.get('/v1/status-pages');
+    const calledHeaders = fetchMock.mock.calls[0][1].headers as Record<string, string>;
+    expect(calledHeaders.Authorization).toBeUndefined();
   });
 
   it('throws GetMonitorApiError on non-2xx responses', async () => {
@@ -50,12 +60,12 @@ describe('GetMonitorClient', () => {
     expect(JSON.parse(call[1].body as string)).toEqual({ name: 'My Monitor' });
   });
 
-  it('appends query params to GET requests', async () => {
+  it('appends query params to GET requests, skipping undefined values', async () => {
     const fetchMock = mockFetch([]);
     vi.stubGlobal('fetch', fetchMock);
-    await client.get('/v1/incidents', { status: 'investigating', page: '2' });
+    await client.get('/v1/incidents', { status: 'investigating', page: undefined });
     const calledUrl = fetchMock.mock.calls[0][0] as string;
     expect(calledUrl).toContain('status=investigating');
-    expect(calledUrl).toContain('page=2');
+    expect(calledUrl).not.toContain('page');
   });
 });

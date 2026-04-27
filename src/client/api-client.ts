@@ -2,7 +2,7 @@
 
 export interface ClientOptions {
   baseUrl: string;
-  token: string;
+  token?: string;  // optional — GET endpoints are public
 }
 
 export class GetMonitorApiError extends Error {
@@ -18,7 +18,7 @@ export class GetMonitorApiError extends Error {
 
 export class GetMonitorClient {
   private readonly baseUrl: string;
-  private readonly token: string;
+  private readonly token: string | undefined;
 
   constructor(opts: ClientOptions) {
     this.baseUrl = opts.baseUrl.replace(/\/$/, '');
@@ -26,13 +26,12 @@ export class GetMonitorClient {
   }
 
   private headers(): Record<string, string> {
-    return {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${this.token}`,
-    };
+    const h: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (this.token) h.Authorization = `Bearer ${this.token}`;
+    return h;
   }
 
-  async get<T>(path: string, params?: Record<string, string>): Promise<T> {
+  async get<T>(path: string, params?: Record<string, string | undefined>): Promise<T> {
     const url = new URL(this.baseUrl + path);
     if (params) {
       for (const [k, v] of Object.entries(params)) {
@@ -70,10 +69,13 @@ export class GetMonitorClient {
   }
 
   private async parse<T>(res: Response): Promise<T> {
-    const body = await res.json().catch(() => null);
     if (!res.ok) {
+      const body = await res.json().catch(() => null);
       throw new GetMonitorApiError(`GetMonitor API error ${res.status}`, res.status, body);
     }
-    return body as T;
+    if (res.status === 204 || res.headers.get('content-length') === '0') {
+      return undefined as T;
+    }
+    return res.json() as Promise<T>;
   }
 }
