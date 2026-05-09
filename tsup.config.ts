@@ -4,7 +4,7 @@ export default defineConfig([
   {
     entry: { stdio: 'src/stdio.ts' },
     format: ['esm'],
-    dts: true,
+    dts: false,
     clean: true,
     target: 'node20',
     banner: { js: '#!/usr/bin/env node' },

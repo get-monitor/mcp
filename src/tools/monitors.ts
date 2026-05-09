@@ -1,55 +1,51 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import type { GetMonitorClient } from '../client/api-client.js';
-import type { ToolResponse } from './status-pages.js';
-
-function text(t: string): ToolResponse {
-  return { content: [{ type: 'text', text: t }] };
-}
-
-function formatMonitor(m: Record<string, unknown>): string {
-  return [
-    `ID: ${m.id}`,
-    `Name: ${m.name}`,
-    `Status: ${m.status}`,
-  ].filter(Boolean).join('\n');
-}
-
-export async function listMonitors(client: GetMonitorClient, statusPageId: string): Promise<ToolResponse> {
-  const data = await client.get<Record<string, unknown>[]>(`/api/v1/status-pages/${statusPageId}/monitors`);
-  if (!data || data.length === 0) return text('No monitors found for this status page.');
-  return text(data.map(formatMonitor).join('\n\n---\n\n'));
-}
-
-export async function getMonitorAggregations(
-  client: GetMonitorClient,
-  statusPageId: string,
-  monitorId: string,
-  date: string,
-): Promise<ToolResponse> {
-  const data = await client.get<Record<string, unknown>>(
-    `/api/v1/status-pages/${statusPageId}/monitors/${monitorId}/aggregations`,
-    { date },
-  );
-  return text(JSON.stringify(data, null, 2));
-}
+import { callApi, text, type ToolResponse } from './helpers.js';
 
 export function registerMonitorTools(server: McpServer, client: GetMonitorClient): void {
   server.tool(
-    'list_monitors',
-    'List all monitors attached to a status page with their current status',
-    { statusPageId: z.string().describe('Status page ID') },
-    ({ statusPageId }) => listMonitors(client, statusPageId),
+    'list_all_monitors',
+    'List all monitors across all types.',
+    {},
+    () => callApi(() => client.get('/api/v1/monitors')),
   );
 
   server.tool(
-    'get_monitor_aggregations',
-    'Get hourly uptime aggregations (per region) for a specific monitor on a given date',
+    'get_monitor',
+    'Get details about a specific monitor.',
     {
-      statusPageId: z.string().describe('Status page ID'),
-      monitorId: z.string().describe('Monitor ID'),
-      date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).describe('Date in YYYY-MM-DD format, e.g. 2024-01-15'),
+      id: z.string().describe('The monitor ID'),
     },
-    ({ statusPageId, monitorId, date }) => getMonitorAggregations(client, statusPageId, monitorId, date),
+    ({ id }) => callApi(() => client.get(`/api/v1/monitors/${id}`)),
+  );
+
+  server.tool(
+    'get_organization_monitor_statistics',
+    'Get monitor statistics for an organization.',
+    {
+      timeRange: z.enum(['24h', '7d', '30d']).optional().describe('Time range for statistics (24h, 7d, or 30d)'),
+    },
+    ({ timeRange }) => callApi(() => client.get('/api/v1/monitors/organization/statistics', timeRange ? { timeRange } : undefined)),
+  );
+
+  server.tool(
+    'get_status_page_monitor_statistics',
+    'Get monitor statistics for a specific status page.',
+    {
+      statusPageId: z.string().describe('The status page ID'),
+      timeRange: z.enum(['24h', '7d', '30d']).optional().describe('Time range for statistics (24h, 7d, or 30d)'),
+    },
+    ({ statusPageId, timeRange }) =>
+      callApi(() => client.get(`/api/v1/status-pages/${statusPageId}/monitors/statistics`, timeRange ? { timeRange } : undefined)),
+  );
+
+  server.tool(
+    'list_status_page_uptime_monitors',
+    'List uptime monitors for a specific status page.',
+    {
+      statusPageId: z.string().describe('The status page ID'),
+    },
+    ({ statusPageId }) => callApi(() => client.get(`/api/v1/status-pages/${statusPageId}/uptime`)),
   );
 }

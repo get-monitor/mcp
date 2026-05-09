@@ -1,13 +1,15 @@
 {
   "name": "@getmonitor/mcp",
   "version": "0.1.0",
-  "description": "GetMonitor MCP server — connects AI assistants to your monitors, status pages, incidents, and on-call workflows",
+  "description": "GetMonitor full-API MCP server — full management access to all GetMonitor resources",
   "license": "MIT",
   "type": "module",
   "bin": {
     "getmonitor-mcp": "./dist/stdio.js"
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsup",
     "dev:stdio": "tsx src/stdio.ts",
@@ -31,7 +33,9 @@
     "typescript": "^5.7.0",
     "vitest": "^3.0.0"
   },
-  "engines": { "node": ">=20" },
+  "engines": {
+    "node": ">=20"
+  },
   "publishConfig": {
     "access": "public",
     "registry": "https://registry.npmjs.org/"

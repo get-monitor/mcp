@@ -1,8 +1,6 @@
-// src/client/api-client.ts
-
 export interface ClientOptions {
   baseUrl: string;
-  token?: string;  // optional — GET endpoints are public
+  token?: string;  // optional — some endpoints are public
 }
 
 export class GetMonitorApiError extends Error {
@@ -31,11 +29,11 @@ export class GetMonitorClient {
     return h;
   }
 
-  async get<T>(path: string, params?: Record<string, string | undefined>): Promise<T> {
+  async get<T>(path: string, params?: Record<string, string | number | boolean | undefined>): Promise<T> {
     const url = new URL(this.baseUrl + path);
     if (params) {
       for (const [k, v] of Object.entries(params)) {
-        if (v !== undefined) url.searchParams.set(k, v);
+        if (v !== undefined) url.searchParams.set(k, String(v));
       }
     }
     const res = await fetch(url.toString(), { headers: this.headers() });
@@ -60,10 +58,20 @@ export class GetMonitorClient {
     return this.parse<T>(res);
   }
 
-  async delete<T = void>(path: string): Promise<T> {
+  async put<T>(path: string, body: unknown): Promise<T> {
+    const res = await fetch(this.baseUrl + path, {
+      method: 'PUT',
+      headers: this.headers(),
+      body: JSON.stringify(body),
+    });
+    return this.parse<T>(res);
+  }
+
+  async delete<T = void>(path: string, body?: unknown): Promise<T> {
     const res = await fetch(this.baseUrl + path, {
       method: 'DELETE',
       headers: this.headers(),
+      body: body !== undefined ? JSON.stringify(body) : undefined,
     });
     return this.parse<T>(res);
   }

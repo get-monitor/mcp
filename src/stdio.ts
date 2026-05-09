@@ -1,10 +1,9 @@
-// src/stdio.ts
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { GetMonitorClient } from './client/api-client.js';
 import { createServer } from './server.js';
 
 const apiUrl = process.env.GETMONITOR_API_URL ?? 'https://api.getmonitor.io';
-const apiKey = process.env.GETMONITOR_API_KEY; // optional — GET endpoints are public
+const apiKey = process.env.GETMONITOR_API_KEY;
 
 const client = new GetMonitorClient({ baseUrl: apiUrl, token: apiKey });
 const server = createServer(client);
