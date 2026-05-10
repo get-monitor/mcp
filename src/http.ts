@@ -40,6 +40,10 @@ export function createHttpApp(opts: HttpAppOptions): express.Express {
   const app = express();
   app.use(express.json());
 
+  app.get("/health", (_req, res) => {
+    res.json({ status: "ok" });
+  });
+
   // RFC 8414 Authorization Server Metadata
   app.get("/.well-known/oauth-authorization-server", (_req, res) => {
     res.json({
@@ -58,12 +62,10 @@ export function createHttpApp(opts: HttpAppOptions): express.Express {
     const { client_id, redirect_uri, state, code_challenge } =
       req.query as Record<string, string>;
     if (!redirect_uri || !state || !code_challenge) {
-      res
-        .status(400)
-        .json({
-          error: "invalid_request",
-          error_description: "Missing required params",
-        });
+      res.status(400).json({
+        error: "invalid_request",
+        error_description: "Missing required params",
+      });
       return;
     }
     pkceStore.set(state, {
@@ -139,12 +141,10 @@ export function createHttpApp(opts: HttpAppOptions): express.Express {
   function requireAuth(req: Request, res: Response, next: NextFunction): void {
     const auth = req.headers.authorization;
     if (!auth?.startsWith("Bearer ")) {
-      res
-        .status(401)
-        .json({
-          error: "unauthorized",
-          error_description: "Bearer token required",
-        });
+      res.status(401).json({
+        error: "unauthorized",
+        error_description: "Bearer token required",
+      });
       return;
     }
     const accessToken = auth.slice(7);
@@ -200,7 +200,7 @@ export function createHttpApp(opts: HttpAppOptions): express.Express {
 
 // Run as server when executed directly
 if (process.argv[1] === new URL(import.meta.url).pathname) {
-  const PORT = parseInt(process.env.PORT ?? "3002", 10);
+  const PORT = parseInt(process.env.PORT ?? "3004", 10);
   const app = createHttpApp({
     apiUrl: process.env.GETMONITOR_API_URL ?? "https://api.getmonitor.io",
     appUrl: process.env.GETMONITOR_APP_URL ?? "https://console.getmonitor.io",

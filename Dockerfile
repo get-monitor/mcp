@@ -11,5 +11,5 @@ WORKDIR /app
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules
 ENV NODE_ENV=production
-EXPOSE 8080
+EXPOSE 3004
 CMD ["node", "dist/http.js"]
