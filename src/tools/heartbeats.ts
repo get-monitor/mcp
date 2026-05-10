@@ -23,10 +23,13 @@ export function registerHeartbeatTools(server: McpServer, client: GetMonitorClie
     'create_heartbeat',
     'Create a new heartbeat monitor.',
     {
-      data: z.record(z.string(), z.unknown()).describe('Heartbeat monitor configuration object'),
+      name: z.string().describe('Display name for the heartbeat monitor'),
+      intervalSeconds: z.number().min(60).max(604800).describe('Interval between expected pings in seconds (60 to 604800, i.e. 1 minute to 7 days)'),
+      gracePeriodSeconds: z.number().min(0).max(3600).describe('Grace period in seconds before alerting (0 to 3600)'),
+      description: z.string().optional().describe('Optional description of the heartbeat monitor'),
     },
-    ({ data }) =>
-      callApi(() => client.post('/api/v1/heartbeats', data)),
+    ({ name, intervalSeconds, gracePeriodSeconds, ...rest }) =>
+      callApi(() => client.post('/api/v1/heartbeats', { name, intervalSeconds, gracePeriodSeconds, ...rest })),
   );
 
   server.tool(
@@ -44,10 +47,13 @@ export function registerHeartbeatTools(server: McpServer, client: GetMonitorClie
     'Update a specific heartbeat monitor.',
     {
       id: z.string().describe('The heartbeat monitor ID'),
-      data: z.record(z.string(), z.unknown()).describe('Updated heartbeat monitor configuration object'),
+      name: z.string().optional().describe('Display name for the heartbeat monitor'),
+      intervalSeconds: z.number().min(60).max(604800).optional().describe('Interval between expected pings in seconds (60 to 604800)'),
+      gracePeriodSeconds: z.number().min(0).max(3600).optional().describe('Grace period in seconds before alerting (0 to 3600)'),
+      description: z.string().optional().describe('Optional description of the heartbeat monitor'),
     },
-    ({ id, data }) =>
-      callApi(() => client.patch(`/api/v1/heartbeats/${id}`, data)),
+    ({ id, ...rest }) =>
+      callApi(() => client.patch(`/api/v1/heartbeats/${id}`, rest)),
   );
 
   server.tool(

@@ -121,4 +121,20 @@ describe('Onboarding Tools', () => {
       expect(result).toEqual({ content: [{ type: 'text', text: JSON.stringify(responseData, null, 2) }] });
     });
   });
+
+  describe('error handling', () => {
+    it('handles API errors for complete_onboarding', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 404,
+        headers: new Map(),
+        json: async () => ({ message: 'Not found' }),
+      });
+
+      const handler = getToolHandler(server, 'complete_onboarding');
+      const result = await handler({ body: { orgName: 'Test' } }) as { content: Array<{ type: string; text: string }> };
+
+      expect(result.content[0].text).toContain('Error 404');
+    });
+  });
 });

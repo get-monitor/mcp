@@ -578,10 +578,13 @@ export function registerStatusPageTools(server: McpServer, client: GetMonitorCli
     'Create a new incident on a status page.',
     {
       statusPageId: z.string().describe('The status page ID'),
-      data: z.record(z.unknown()).describe('Incident fields (e.g. title, status, components)'),
+      title: z.string().optional().describe('Title of the incident'),
+      status: z.string().optional().describe('Status of the incident (e.g. investigating, identified, monitoring, resolved)'),
+      message: z.string().optional().describe('Initial message or description of the incident'),
+      affectedComponents: z.array(z.record(z.string(), z.unknown())).optional().describe('List of affected components'),
     },
-    ({ statusPageId, data }) =>
-      callApi(() => client.post(`/api/v1/status-pages/${statusPageId}/incidents`, data)),
+    ({ statusPageId, ...rest }) =>
+      callApi(() => client.post(`/api/v1/status-pages/${statusPageId}/incidents`, rest)),
   );
 
   server.tool(
@@ -671,10 +674,20 @@ export function registerStatusPageTools(server: McpServer, client: GetMonitorCli
     'Create a new maintenance window on a status page.',
     {
       statusPageId: z.string().describe('The status page ID'),
-      data: z.record(z.unknown()).describe('Maintenance fields (e.g. title, startDate, endDate)'),
+      title: z.string().describe('Title of the maintenance window'),
+      scheduledStartAt: z.string().describe('Scheduled start time of the maintenance window (ISO 8601)'),
+      scheduledEndAt: z.string().describe('Scheduled end time of the maintenance window (ISO 8601)'),
+      description: z.string().optional().describe('Optional description of the maintenance window'),
     },
-    ({ statusPageId, data }) =>
-      callApi(() => client.post(`/api/v1/status-pages/${statusPageId}/maintenance`, data)),
+    ({ statusPageId, title, scheduledStartAt, scheduledEndAt, ...rest }) =>
+      callApi(() =>
+        client.post(`/api/v1/status-pages/${statusPageId}/maintenance`, {
+          title,
+          scheduledStartAt,
+          scheduledEndAt,
+          ...rest,
+        }),
+      ),
   );
 
   server.tool(

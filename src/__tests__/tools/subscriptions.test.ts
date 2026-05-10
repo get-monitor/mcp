@@ -196,4 +196,20 @@ describe('Subscription Tools', () => {
       expect(url).toContain('locale=pt-BR');
     });
   });
+
+  describe('error handling', () => {
+    it('handles API errors for list_subscription_plans', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 404,
+        headers: new Map(),
+        json: async () => ({ message: 'Not found' }),
+      });
+
+      const handler = getToolHandler(server, 'list_subscription_plans');
+      const result = await handler({}) as { content: Array<{ type: string; text: string }> };
+
+      expect(result.content[0].text).toContain('Error 404');
+    });
+  });
 });

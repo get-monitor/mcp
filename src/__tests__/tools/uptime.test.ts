@@ -66,38 +66,43 @@ describe('Uptime Tools', () => {
 
   describe('create_uptime_monitor', () => {
     it('calls POST /api/v1/uptime with monitor data', async () => {
-      const monitorData = { name: 'API Monitor', url: 'https://api.example.com' };
-      const responseData = { id: 'monitor-1', ...monitorData };
+      const responseData = { id: 'monitor-1', name: 'API Monitor', targetUrl: 'https://api.example.com' };
       mockFetch.mockResolvedValueOnce(mockResponse(responseData, 201));
 
       const handler = getToolHandler(server, 'create_uptime_monitor');
-      const result = await handler({ data: monitorData });
+      const result = await handler({
+        name: 'API Monitor',
+        targetUrl: 'https://api.example.com',
+        checkType: 'UPTIME',
+        followRedirects: true,
+        regions: ['us-east-1'],
+      });
 
       expect(mockFetch).toHaveBeenCalledTimes(1);
       const [url, options] = mockFetch.mock.calls[0];
       expect(url).toBe('https://api.example.com/api/v1/uptime');
       expect(options.method).toBe('POST');
-      expect(JSON.parse(options.body)).toMatchObject(monitorData);
+      expect(JSON.parse(options.body)).toMatchObject({ name: 'API Monitor', targetUrl: 'https://api.example.com' });
       expect(result).toEqual({ content: [{ type: 'text', text: JSON.stringify(responseData, null, 2) }] });
     });
 
     it('calls POST /api/v1/uptime with complex monitor configuration', async () => {
-      const monitorData = {
-        name: 'API Monitor',
-        url: 'https://api.example.com',
-        interval: 60,
-        regions: ['us-east-1', 'eu-west-1'],
-        alerts: { email: 'admin@example.com' },
-      };
-      const responseData = { id: 'monitor-1', ...monitorData };
+      const responseData = { id: 'monitor-1', name: 'API Monitor' };
       mockFetch.mockResolvedValueOnce(mockResponse(responseData, 201));
 
       const handler = getToolHandler(server, 'create_uptime_monitor');
-      await handler({ data: monitorData });
+      await handler({
+        name: 'API Monitor',
+        targetUrl: 'https://api.example.com',
+        checkType: 'UPTIME',
+        followRedirects: false,
+        regions: ['us-east-1', 'eu-west-1'],
+        timeout: '30s',
+      });
 
       const [, options] = mockFetch.mock.calls[0];
       const body = JSON.parse(options.body);
-      expect(body).toMatchObject(monitorData);
+      expect(body).toMatchObject({ name: 'API Monitor', regions: ['us-east-1', 'eu-west-1'] });
     });
   });
 
@@ -118,36 +123,30 @@ describe('Uptime Tools', () => {
 
   describe('update_uptime_monitor', () => {
     it('calls PATCH /api/v1/uptime/{id} with update data', async () => {
-      const updateData = { name: 'Updated Monitor' };
-      const responseData = { id: 'monitor-1', name: 'Updated Monitor', url: 'https://api.example.com' };
+      const responseData = { id: 'monitor-1', name: 'Updated Monitor', targetUrl: 'https://api.example.com' };
       mockFetch.mockResolvedValueOnce(mockResponse(responseData));
 
       const handler = getToolHandler(server, 'update_uptime_monitor');
-      const result = await handler({ id: 'monitor-1', data: updateData });
+      const result = await handler({ id: 'monitor-1', name: 'Updated Monitor' });
 
       expect(mockFetch).toHaveBeenCalledTimes(1);
       const [url, options] = mockFetch.mock.calls[0];
       expect(url).toBe('https://api.example.com/api/v1/uptime/monitor-1');
       expect(options.method).toBe('PATCH');
-      expect(JSON.parse(options.body)).toMatchObject(updateData);
+      expect(JSON.parse(options.body)).toMatchObject({ name: 'Updated Monitor' });
       expect(result).toEqual({ content: [{ type: 'text', text: JSON.stringify(responseData, null, 2) }] });
     });
 
     it('calls PATCH /api/v1/uptime/{id} with complex update data', async () => {
-      const updateData = {
-        name: 'Updated Monitor',
-        interval: 120,
-        regions: ['us-west-2'],
-      };
-      const responseData = { id: 'monitor-1', ...updateData };
+      const responseData = { id: 'monitor-1', name: 'Updated Monitor', regions: ['us-west-2'] };
       mockFetch.mockResolvedValueOnce(mockResponse(responseData));
 
       const handler = getToolHandler(server, 'update_uptime_monitor');
-      await handler({ id: 'monitor-1', data: updateData });
+      await handler({ id: 'monitor-1', name: 'Updated Monitor', regions: ['us-west-2'] });
 
       const [, options] = mockFetch.mock.calls[0];
       const body = JSON.parse(options.body);
-      expect(body).toMatchObject(updateData);
+      expect(body).toMatchObject({ name: 'Updated Monitor', regions: ['us-west-2'] });
     });
   });
 
@@ -351,7 +350,13 @@ describe('Uptime Tools', () => {
       });
 
       const handler = getToolHandler(server, 'create_uptime_monitor');
-      const result = await handler({ data: { name: 'Test' } });
+      const result = await handler({
+        name: 'Test',
+        targetUrl: 'https://test.example.com',
+        checkType: 'UPTIME',
+        followRedirects: true,
+        regions: ['us-east-1'],
+      });
 
       expect(result).toEqual({
         content: [{ type: 'text', text: 'Error 500: {"message":"Internal server error"}' }],

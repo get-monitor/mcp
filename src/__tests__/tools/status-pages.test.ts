@@ -756,12 +756,13 @@ describe('Status Page Tools', () => {
       mockFetch.mockResolvedValueOnce(mockResponse(responseData, 201));
 
       const handler = getToolHandler(server, 'create_incident');
-      const result = await handler({ statusPageId: 'sp-1', data: { title: 'Database outage' } });
+      const result = await handler({ statusPageId: 'sp-1', title: 'Database outage' });
 
       expect(mockFetch).toHaveBeenCalledTimes(1);
       const [url, options] = mockFetch.mock.calls[0];
       expect(url).toBe('https://api.example.com/api/v1/status-pages/sp-1/incidents');
       expect(options.method).toBe('POST');
+      expect(JSON.parse(options.body)).toMatchObject({ title: 'Database outage' });
       expect(result).toEqual({ content: [{ type: 'text', text: JSON.stringify(responseData, null, 2) }] });
     });
   });
@@ -859,12 +860,18 @@ describe('Status Page Tools', () => {
       mockFetch.mockResolvedValueOnce(mockResponse(responseData, 201));
 
       const handler = getToolHandler(server, 'create_maintenance');
-      const result = await handler({ statusPageId: 'sp-1', data: { title: 'Planned upgrade' } });
+      const result = await handler({
+        statusPageId: 'sp-1',
+        title: 'Planned upgrade',
+        scheduledStartAt: '2024-01-15T02:00:00Z',
+        scheduledEndAt: '2024-01-15T04:00:00Z',
+      });
 
       expect(mockFetch).toHaveBeenCalledTimes(1);
       const [url, options] = mockFetch.mock.calls[0];
       expect(url).toBe('https://api.example.com/api/v1/status-pages/sp-1/maintenance');
       expect(options.method).toBe('POST');
+      expect(JSON.parse(options.body)).toMatchObject({ title: 'Planned upgrade' });
       expect(result).toEqual({ content: [{ type: 'text', text: JSON.stringify(responseData, null, 2) }] });
     });
   });

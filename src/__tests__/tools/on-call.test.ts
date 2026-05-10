@@ -67,7 +67,7 @@ describe('On-Call Tools', () => {
       mockFetch.mockResolvedValueOnce(mockResponse(responseData, 201));
 
       const handler = getToolHandler(server, 'create_oncall_team');
-      const result = await handler({ body: { name: 'Alpha Team' } });
+      const result = await handler({ name: 'Alpha Team' });
 
       expect(mockFetch).toHaveBeenCalledTimes(1);
       const [url, options] = mockFetch.mock.calls[0];
@@ -281,7 +281,7 @@ describe('On-Call Tools', () => {
       mockFetch.mockResolvedValueOnce(mockResponse(responseData, 201));
 
       const handler = getToolHandler(server, 'create_oncall_policy');
-      const result = await handler({ body: { name: 'Escalation Policy', type: 'escalation' } });
+      const result = await handler({ name: 'Escalation Policy', thresholdMinutes: 5 });
 
       expect(mockFetch).toHaveBeenCalledTimes(1);
       const [url, options] = mockFetch.mock.calls[0];

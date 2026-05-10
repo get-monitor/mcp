@@ -17,9 +17,10 @@ export function registerOnCallTools(server: McpServer, client: GetMonitorClient)
     'create_oncall_team',
     'Create a new on-call team.',
     {
-      body: z.record(z.string(), z.unknown()).describe('On-call team fields'),
+      name: z.string().describe('Display name for the on-call team'),
+      description: z.string().optional().describe('Optional description of the on-call team'),
     },
-    ({ body }) => callApi(() => client.post('/api/v1/on-call/teams', body)),
+    ({ name, ...rest }) => callApi(() => client.post('/api/v1/on-call/teams', { name, ...rest })),
   );
 
   server.tool(
@@ -153,9 +154,17 @@ export function registerOnCallTools(server: McpServer, client: GetMonitorClient)
     'create_oncall_policy',
     'Create a new on-call policy.',
     {
-      body: z.record(z.string(), z.unknown()).describe('On-call policy fields'),
+      name: z.string().describe('Display name for the on-call policy'),
+      thresholdMinutes: z.number().describe('Number of minutes before escalating'),
+      channelType: z
+        .enum(['email', 'sms', 'whatsapp', 'webhook', 'slack', 'discord', 'telegram', 'teams'])
+        .optional()
+        .describe('Notification channel type'),
+      config: z.record(z.string(), z.unknown()).optional().describe('Channel-specific configuration object'),
+      teamId: z.string().optional().describe('ID of the on-call team to associate with this policy'),
     },
-    ({ body }) => callApi(() => client.post('/api/v1/on-call/policies', body)),
+    ({ name, thresholdMinutes, ...rest }) =>
+      callApi(() => client.post('/api/v1/on-call/policies', { name, thresholdMinutes, ...rest })),
   );
 
   server.tool(

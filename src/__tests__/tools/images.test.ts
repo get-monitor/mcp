@@ -267,4 +267,20 @@ describe('Image Tools', () => {
       expect(result).toEqual({ content: [{ type: 'text', text: JSON.stringify(responseData, null, 2) }] });
     });
   });
+
+  describe('error handling', () => {
+    it('handles API errors for get_image_constraints', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 404,
+        headers: new Map(),
+        json: async () => ({ message: 'Not found' }),
+      });
+
+      const handler = getToolHandler(server, 'get_image_constraints');
+      const result = await handler({ type: 'profile' }) as { content: Array<{ type: string; text: string }> };
+
+      expect(result.content[0].text).toContain('Error 404');
+    });
+  });
 });

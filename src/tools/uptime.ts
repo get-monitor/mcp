@@ -18,10 +18,24 @@ export function registerUptimeTools(server: McpServer, client: GetMonitorClient)
     'create_uptime_monitor',
     'Create a new uptime monitor.',
     {
-      data: z.record(z.string(), z.unknown()).describe('Uptime monitor configuration object'),
+      name: z.string().describe('Display name for the monitor'),
+      targetUrl: z.string().describe('URL to monitor'),
+      checkType: z.enum(['UPTIME', 'CONTENT']).describe('Type of check: UPTIME or CONTENT'),
+      followRedirects: z.boolean().describe('Whether to follow HTTP redirects'),
+      regions: z.array(z.string()).describe('List of regions to check from'),
+      expectedResponseCode: z.string().optional().describe('Expected HTTP response code'),
+      contentAlert: z.enum(['NOT_FOUND', 'FOUND']).optional().describe('Content alert type: NOT_FOUND or FOUND'),
+      content: z.string().optional().describe('Content string to check for (used with contentAlert)'),
+      body: z.record(z.string(), z.unknown()).optional().describe('Request body to send with the check'),
+      timeout: z.string().optional().describe('Request timeout (e.g. "30s")'),
+      alertSensitivity: z.string().optional().describe('Alert sensitivity level'),
+      httpMethod: z.string().optional().describe('HTTP method to use (e.g. GET, POST)'),
+      headers: z.array(z.record(z.string(), z.unknown())).optional().describe('HTTP headers to send with the check'),
+      username: z.string().optional().describe('Username for basic authentication'),
+      password: z.string().optional().describe('Password for basic authentication'),
     },
-    ({ data }) =>
-      callApi(() => client.post('/api/v1/uptime', data)),
+    ({ name, targetUrl, checkType, followRedirects, regions, ...rest }) =>
+      callApi(() => client.post('/api/v1/uptime', { name, targetUrl, checkType, followRedirects, regions, ...rest })),
   );
 
   server.tool(
@@ -39,10 +53,24 @@ export function registerUptimeTools(server: McpServer, client: GetMonitorClient)
     'Update a specific uptime monitor.',
     {
       id: z.string().describe('The uptime monitor ID'),
-      data: z.record(z.string(), z.unknown()).describe('Updated uptime monitor configuration object'),
+      name: z.string().optional().describe('Display name for the monitor'),
+      targetUrl: z.string().optional().describe('URL to monitor'),
+      checkType: z.enum(['UPTIME', 'CONTENT']).optional().describe('Type of check: UPTIME or CONTENT'),
+      followRedirects: z.boolean().optional().describe('Whether to follow HTTP redirects'),
+      regions: z.array(z.string()).optional().describe('List of regions to check from'),
+      expectedResponseCode: z.string().optional().describe('Expected HTTP response code'),
+      contentAlert: z.enum(['NOT_FOUND', 'FOUND']).optional().describe('Content alert type: NOT_FOUND or FOUND'),
+      content: z.string().optional().describe('Content string to check for (used with contentAlert)'),
+      body: z.record(z.string(), z.unknown()).optional().describe('Request body to send with the check'),
+      timeout: z.string().optional().describe('Request timeout (e.g. "30s")'),
+      alertSensitivity: z.string().optional().describe('Alert sensitivity level'),
+      httpMethod: z.string().optional().describe('HTTP method to use (e.g. GET, POST)'),
+      headers: z.array(z.record(z.string(), z.unknown())).optional().describe('HTTP headers to send with the check'),
+      username: z.string().optional().describe('Username for basic authentication'),
+      password: z.string().optional().describe('Password for basic authentication'),
     },
-    ({ id, data }) =>
-      callApi(() => client.patch(`/api/v1/uptime/${id}`, data)),
+    ({ id, ...rest }) =>
+      callApi(() => client.patch(`/api/v1/uptime/${id}`, rest)),
   );
 
   server.tool(

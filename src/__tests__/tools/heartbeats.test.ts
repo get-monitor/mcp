@@ -82,13 +82,13 @@ describe('Heartbeat Tools', () => {
       mockFetch.mockResolvedValueOnce(mockResponse(responseData, 201));
 
       const handler = getToolHandler(server, 'create_heartbeat');
-      const result = await handler({ data: { name: 'My Heartbeat', url: 'https://example.com' } });
+      const result = await handler({ name: 'My Heartbeat', intervalSeconds: 300, gracePeriodSeconds: 60 });
 
       expect(mockFetch).toHaveBeenCalledTimes(1);
       const [url, options] = mockFetch.mock.calls[0];
       expect(url).toBe('https://api.example.com/api/v1/heartbeats');
       expect(options.method).toBe('POST');
-      expect(JSON.parse(options.body)).toMatchObject({ name: 'My Heartbeat', url: 'https://example.com' });
+      expect(JSON.parse(options.body)).toMatchObject({ name: 'My Heartbeat', intervalSeconds: 300, gracePeriodSeconds: 60 });
       expect(result).toEqual({ content: [{ type: 'text', text: JSON.stringify(responseData, null, 2) }] });
     });
   });
@@ -114,7 +114,7 @@ describe('Heartbeat Tools', () => {
       mockFetch.mockResolvedValueOnce(mockResponse(responseData));
 
       const handler = getToolHandler(server, 'update_heartbeat');
-      const result = await handler({ id: 'hb-abc', data: { name: 'Updated Heartbeat' } });
+      const result = await handler({ id: 'hb-abc', name: 'Updated Heartbeat' });
 
       expect(mockFetch).toHaveBeenCalledTimes(1);
       const [url, options] = mockFetch.mock.calls[0];
@@ -207,6 +207,22 @@ describe('Heartbeat Tools', () => {
       expect(options.method).toBe('POST');
       expect(JSON.parse(options.body)).toEqual({});
       expect(result).toEqual({ content: [{ type: 'text', text: JSON.stringify(responseData, null, 2) }] });
+    });
+  });
+
+  describe('error handling', () => {
+    it('handles API errors for get_heartbeat', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 404,
+        headers: new Map(),
+        json: async () => ({ message: 'Not found' }),
+      });
+
+      const handler = getToolHandler(server, 'get_heartbeat');
+      const result = await handler({ id: 'hb_404' }) as { content: Array<{ type: string; text: string }> };
+
+      expect(result.content[0].text).toContain('Error 404');
     });
   });
 });
