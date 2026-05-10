@@ -6,7 +6,13 @@ Unlike the read-only public MCP server, this server provides full CRUD access to
 
 ## Hosted — OAuth setup
 
-Add to your MCP client config:
+**Claude Code:**
+
+```bash
+claude mcp add --transport http getmonitor https://mcp.getmonitor.io/mcp
+```
+
+Or add manually to your MCP client config:
 
 ```json
 {
@@ -26,7 +32,13 @@ Your client will guide you through OAuth login with your GetMonitor account. The
 npm install -g @getmonitor/mcp
 ```
 
-Add to your MCP client config:
+**Claude Code:**
+
+```bash
+claude mcp add getmonitor getmonitor-mcp --env GETMONITOR_API_KEY=your_api_key
+```
+
+Or add manually to your MCP client config:
 
 ```json
 {
