@@ -50,10 +50,34 @@ export function createHttpApp(opts: HttpAppOptions): express.Express {
       issuer: ISSUER,
       authorization_endpoint: `${ISSUER}/authorize`,
       token_endpoint: `${ISSUER}/token`,
+      registration_endpoint: `${ISSUER}/register`,
       response_types_supported: ["code"],
       grant_types_supported: ["authorization_code"],
       code_challenge_methods_supported: ["S256"],
       token_endpoint_auth_methods_supported: ["none"],
+    });
+  });
+
+  // RFC 7591 Dynamic Client Registration
+  app.post("/register", (req, res) => {
+    const { redirect_uris, client_name, token_endpoint_auth_method } =
+      req.body as Record<string, unknown>;
+    if (!Array.isArray(redirect_uris) || redirect_uris.length === 0) {
+      res.status(400).json({
+        error: "invalid_client_metadata",
+        error_description: "redirect_uris is required",
+      });
+      return;
+    }
+    const clientId = generateToken(16);
+    res.status(201).json({
+      client_id: clientId,
+      client_id_issued_at: Math.floor(Date.now() / 1000),
+      redirect_uris,
+      client_name: client_name ?? "MCP Client",
+      token_endpoint_auth_method: token_endpoint_auth_method ?? "none",
+      grant_types: ["authorization_code"],
+      response_types: ["code"],
     });
   });
 
