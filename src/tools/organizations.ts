@@ -5,15 +5,6 @@ import { callApi, text, type ToolResponse } from './helpers.js';
 
 export function registerOrganizationTools(server: McpServer, client: GetMonitorClient): void {
   server.tool(
-    'check_organization_slug',
-    'Check whether an organization slug is available for use.',
-    {
-      slug: z.string().describe('The organization slug to check for availability'),
-    },
-    ({ slug }) => callApi(() => client.get('/api/v1/organizations/check-slug', { slug })),
-  );
-
-  server.tool(
     'create_organization',
     'Create a new organization.',
     {
@@ -32,20 +23,6 @@ export function registerOrganizationTools(server: McpServer, client: GetMonitorC
     'List all organizations the authenticated user belongs to.',
     {},
     () => callApi(() => client.get('/api/v1/organizations')),
-  );
-
-  server.tool(
-    'list_guest_access_organizations',
-    'List organizations the authenticated user has guest access to.',
-    {},
-    () => callApi(() => client.get('/api/v1/organizations/guest-access')),
-  );
-
-  server.tool(
-    'get_user_organization_roles',
-    'Get the roles the authenticated user has across all organizations.',
-    {},
-    () => callApi(() => client.get('/api/v1/organizations/roles')),
   );
 
   server.tool(
@@ -87,17 +64,6 @@ export function registerOrganizationTools(server: McpServer, client: GetMonitorC
     },
     ({ orgId, name, logo, email, phoneNumber }) =>
       callApi(() => client.patch(`/api/v1/organizations/${orgId}`, { name, logo, email, phoneNumber })),
-  );
-
-  server.tool(
-    'update_organization_language',
-    'Update the default language setting for a specific organization.',
-    {
-      orgId: z.string().describe('The organization ID'),
-      language: z.enum(['en-US', 'pt-BR']).describe('The language code to set as the organization default (en-US or pt-BR)'),
-    },
-    ({ orgId, language }) =>
-      callApi(() => client.patch(`/api/v1/organizations/${orgId}/language`, { language })),
   );
 
   server.tool(
@@ -164,23 +130,4 @@ export function registerOrganizationTools(server: McpServer, client: GetMonitorC
       callApi(() => client.get(`/api/v1/organizations/${organizationId}/subscription/usage`)),
   );
 
-  server.tool(
-    'get_invitation',
-    'Get details about a specific invitation.',
-    {
-      invitationId: z.string().describe('The invitation ID'),
-    },
-    ({ invitationId }) =>
-      callApi(() => client.get(`/api/v1/invitations/${invitationId}`)),
-  );
-
-  server.tool(
-    'accept_invitation',
-    'Accept a pending organization invitation.',
-    {
-      invitationId: z.string().describe('The invitation ID to accept'),
-    },
-    ({ invitationId }) =>
-      callApi(() => client.post(`/api/v1/invitations/${invitationId}/accept`, {})),
-  );
 }

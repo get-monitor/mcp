@@ -55,14 +55,4 @@ export function registerSubscriptionTools(server: McpServer, client: GetMonitorC
       callApi(() => client.post('/api/v1/subscriptions/unsubscribe', body)),
   );
 
-  server.tool(
-    'list_subscription_plans',
-    'List available subscription plans with optional currency and locale filtering.',
-    {
-      currency: z.enum(['USD', 'BRL']).optional().describe('Currency code (USD or BRL)'),
-      locale: z.string().optional().describe('Locale for the plans'),
-    },
-    ({ currency, locale }) =>
-      callApi(() => client.get('/api/v1/subscriptions/plans', { currency, locale })),
-  );
 }

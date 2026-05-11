@@ -1,9 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { GetMonitorClient } from './client/api-client.js';
 import { registerOrganizationTools } from './tools/organizations.js';
-import { registerUserTools } from './tools/users.js';
-import { registerImageTools } from './tools/images.js';
-import { registerOnboardingTools } from './tools/onboarding.js';
 import { registerUptimeTools } from './tools/uptime.js';
 import { registerMonitorTools } from './tools/monitors.js';
 import { registerHeartbeatTools } from './tools/heartbeats.js';
@@ -18,9 +15,6 @@ export function createServer(client: GetMonitorClient): McpServer {
     version: '0.1.0',
   });
   registerOrganizationTools(server, client);
-  registerUserTools(server, client);
-  registerImageTools(server, client);
-  registerOnboardingTools(server, client);
   registerUptimeTools(server, client);
   registerMonitorTools(server, client);
   registerHeartbeatTools(server, client);

@@ -16,13 +16,6 @@ export function registerIntegrationTools(server: McpServer, client: GetMonitorCl
   );
 
   server.tool(
-    'get_integration_app_counts',
-    'Get counts of integration apps grouped by type.',
-    {},
-    () => callApi(() => client.get('/api/v1/integrations/apps/counts')),
-  );
-
-  server.tool(
     'get_integration_app',
     'Get details about a specific integration app.',
     {
@@ -99,15 +92,6 @@ export function registerIntegrationTools(server: McpServer, client: GetMonitorCl
     ({ id }) => callApi(() => client.get(`/api/v1/integrations/installations/${id}/health`)),
   );
 
-  server.tool(
-    'reconnect_installation',
-    'Trigger a reconnection attempt for an integration installation.',
-    {
-      id: z.string().describe('The installation ID to reconnect'),
-    },
-    ({ id }) => callApi(() => client.post(`/api/v1/integrations/installations/${id}/reconnect`, {})),
-  );
-
   // ─── Destination Configs ──────────────────────────────────────────────────────
 
   server.tool(
@@ -155,29 +139,4 @@ export function registerIntegrationTools(server: McpServer, client: GetMonitorCl
       callApi(() => client.delete(`/api/v1/integrations/installations/${id}/destination-configs/${configId}`)),
   );
 
-  server.tool(
-    'preview_destination_template',
-    'Preview the rendered output of a destination template for a given installation.',
-    {
-      id: z.string().describe('The installation ID'),
-      config: z.record(z.unknown()).describe('Template preview configuration'),
-    },
-    ({ id, config }) =>
-      callApi(() =>
-        client.post(`/api/v1/integrations/installations/${id}/destination-configs/preview`, config),
-      ),
-  );
-
-  server.tool(
-    'test_destination_config',
-    'Send a test event through a destination configuration to verify it is working.',
-    {
-      id: z.string().describe('The installation ID'),
-      configId: z.string().describe('The destination config ID to test'),
-    },
-    ({ id, configId }) =>
-      callApi(() =>
-        client.post(`/api/v1/integrations/installations/${id}/destination-configs/${configId}/test`, {}),
-      ),
-  );
 }

@@ -29,16 +29,6 @@ export function registerStatusPageTools(server: McpServer, client: GetMonitorCli
   );
 
   server.tool(
-    'check_status_page_domain_availability',
-    'Check whether a status page slug/domain is available.',
-    {
-      slug: z.string().describe('The slug to check for availability'),
-    },
-    ({ slug }) =>
-      callApi(() => client.get('/api/v1/status-pages/domain/availability', { slug })),
-  );
-
-  server.tool(
     'get_status_page_customization',
     'Get the customization settings for a status page.',
     {

@@ -168,13 +168,6 @@ export function registerOnCallTools(server: McpServer, client: GetMonitorClient)
   );
 
   server.tool(
-    'get_oncall_policy_type_counts',
-    'Get counts of on-call policies grouped by type.',
-    {},
-    () => callApi(() => client.get('/api/v1/on-call/policies/type-counts')),
-  );
-
-  server.tool(
     'get_oncall_policy',
     'Get details of a specific on-call policy.',
     {
@@ -247,21 +240,7 @@ export function registerOnCallTools(server: McpServer, client: GetMonitorClient)
       callApi(() => client.delete(`/api/v1/on-call/monitors/${monitorId}/policies/${policyId}`)),
   );
 
-  // ─── Graph, Migration, Notifications ─────────────────────────────────────
-
-  server.tool(
-    'get_oncall_graph',
-    'Get the on-call graph showing team and policy relationships.',
-    {},
-    () => callApi(() => client.get('/api/v1/on-call/graph')),
-  );
-
-  server.tool(
-    'migrate_oncall',
-    'Trigger an on-call configuration migration.',
-    {},
-    () => callApi(() => client.post('/api/v1/on-call/migrate', {})),
-  );
+  // ─── Notifications ────────────────────────────────────────────────────────
 
   server.tool(
     'list_oncall_notifications',
