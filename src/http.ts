@@ -4,6 +4,7 @@ import express, {
   type NextFunction,
 } from "express";
 import { randomBytes, createHash } from "node:crypto";
+import type { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { GetMonitorClient } from "./client/api-client.js";
 import { createServer } from "./server.js";
 
@@ -27,6 +28,7 @@ const authCodeStore = new Map<
   string,
   { sessionToken: string; expiresAt: number; codeChallenge: string }
 >();
+const mcpSessions = new Map<string, { transport: StreamableHTTPServerTransport }>();
 
 function generateToken(bytes = 32): string {
   return randomBytes(bytes).toString("base64url");
@@ -188,6 +190,21 @@ export function createHttpApp(opts: HttpAppOptions): express.Express {
   app.all("/mcp", requireAuth, async (req, res) => {
     const { StreamableHTTPServerTransport } =
       await import("@modelcontextprotocol/sdk/server/streamableHttp.js");
+
+    const incomingSessionId = req.headers["mcp-session-id"] as string | undefined;
+
+    // Reuse existing session
+    if (incomingSessionId && mcpSessions.has(incomingSessionId)) {
+      const { transport } = mcpSessions.get(incomingSessionId)!;
+      await transport.handleRequest(
+        req,
+        res,
+        req.method === "POST" ? req.body : undefined,
+      );
+      return;
+    }
+
+    // New session
     const sessionToken = (req as unknown as Record<string, unknown>)
       .sessionToken as string;
     const apiClient = new GetMonitorClient({
@@ -198,15 +215,17 @@ export function createHttpApp(opts: HttpAppOptions): express.Express {
     const transport = new StreamableHTTPServerTransport({
       sessionIdGenerator: () => generateToken(16),
     });
-    try {
-      await mcpServer.connect(transport);
-      await transport.handleRequest(
-        req,
-        res,
-        req.method === "POST" ? req.body : undefined,
-      );
-    } finally {
-      await mcpServer.close().catch(() => {});
+    transport.onclose = () => {
+      if (transport.sessionId) mcpSessions.delete(transport.sessionId);
+    };
+    await mcpServer.connect(transport);
+    await transport.handleRequest(
+      req,
+      res,
+      req.method === "POST" ? req.body : undefined,
+    );
+    if (transport.sessionId) {
+      mcpSessions.set(transport.sessionId, { transport });
     }
   });
 
