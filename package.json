@@ -1,6 +1,6 @@
 {
   "name": "@getmonitor/mcp",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "GetMonitor API MCP server — full management access to all GetMonitor resources",
   "license": "MIT",
   "type": "module",
