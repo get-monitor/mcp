@@ -207,9 +207,18 @@ export function createHttpApp(opts: HttpAppOptions): express.Express {
     // New session
     const sessionToken = (req as unknown as Record<string, unknown>)
       .sessionToken as string;
+    const tempClient = new GetMonitorClient({ baseUrl: opts.apiUrl, token: sessionToken });
+    let organizationId: string | undefined;
+    try {
+      const orgs = await tempClient.get<Array<{ id: string }>>('/api/v1/organizations');
+      organizationId = orgs[0]?.id;
+    } catch {
+      // proceed without org ID — tools scoped to explicit IDs still work
+    }
     const apiClient = new GetMonitorClient({
       baseUrl: opts.apiUrl,
       token: sessionToken,
+      organizationId,
     });
     const mcpServer = createServer(apiClient);
     const transport = new StreamableHTTPServerTransport({

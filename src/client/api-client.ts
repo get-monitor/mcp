@@ -1,6 +1,7 @@
 export interface ClientOptions {
   baseUrl: string;
-  token?: string;  // optional — some endpoints are public
+  token?: string;         // optional — some endpoints are public
+  organizationId?: string; // sent as X-Organization-Id on every request
 }
 
 export class GetMonitorApiError extends Error {
@@ -17,15 +18,18 @@ export class GetMonitorApiError extends Error {
 export class GetMonitorClient {
   private readonly baseUrl: string;
   private readonly token: string | undefined;
+  private readonly organizationId: string | undefined;
 
   constructor(opts: ClientOptions) {
     this.baseUrl = opts.baseUrl.replace(/\/$/, '');
     this.token = opts.token;
+    this.organizationId = opts.organizationId;
   }
 
   private headers(): Record<string, string> {
     const h: Record<string, string> = { 'Content-Type': 'application/json' };
     if (this.token) h.Authorization = `Bearer ${this.token}`;
+    if (this.organizationId) h['X-Organization-Id'] = this.organizationId;
     return h;
   }
 
