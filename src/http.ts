@@ -164,8 +164,9 @@ export function createHttpApp(opts: HttpAppOptions): express.Express {
     });
   });
 
-  // Middleware: validate MCP access token (in-memory only)
-  function requireAuth(req: Request, res: Response, next: NextFunction): void {
+  // Middleware: validate MCP access token — supports both OAuth tokens (tokenStore)
+  // and raw Better Auth session tokens (validated via API session check).
+  async function requireAuth(req: Request, res: Response, next: NextFunction): Promise<void> {
     const auth = req.headers.authorization;
     if (!auth?.startsWith("Bearer ")) {
       res.status(401).json({
@@ -174,16 +175,32 @@ export function createHttpApp(opts: HttpAppOptions): express.Express {
       });
       return;
     }
-    const accessToken = auth.slice(7);
-    const entry = tokenStore.get(accessToken);
-    if (!entry || Date.now() > entry.expiresAt) {
-      tokenStore.delete(accessToken);
-      res.status(401).json({ error: "invalid_token" });
-      return;
+    const bearer = auth.slice(7);
+
+    // Path 1: OAuth token from tokenStore (existing flow)
+    const entry = tokenStore.get(bearer);
+    if (entry) {
+      if (entry.expiresAt > Date.now()) {
+        (req as unknown as Record<string, unknown>).sessionToken = entry.sessionToken;
+        return next();
+      }
+      tokenStore.delete(bearer); // evict stale entry eagerly
     }
-    (req as unknown as Record<string, unknown>).sessionToken =
-      entry.sessionToken;
-    next();
+
+    // Path 2: Raw Better Auth session token (AI service → MCP)
+    try {
+      const sessionResp = await fetch(`${opts.apiUrl}/api/auth/get-session`, {
+        headers: { Authorization: `Bearer ${bearer}` },
+      });
+      if (sessionResp.ok) {
+        (req as unknown as Record<string, unknown>).sessionToken = bearer;
+        return next();
+      }
+    } catch {
+      // fall through to 401
+    }
+
+    res.status(401).json({ error: "invalid_token", error_description: "Token expired or not found" });
   }
 
   // MCP Streamable HTTP endpoint
