@@ -1,9 +1,13 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import request from 'supertest';
 import { createHttpApp } from '../http.js';
 
+const fetchSpy = vi.spyOn(globalThis, 'fetch');
+
 describe('HTTP transport OAuth', () => {
   const app = createHttpApp({ apiUrl: 'https://api.getmonitor.io', appUrl: 'https://console.getmonitor.io' });
+
+  afterEach(() => fetchSpy.mockReset());
 
   it('returns RFC 8414 metadata at /.well-known/oauth-authorization-server', async () => {
     const res = await request(app).get('/.well-known/oauth-authorization-server');
@@ -53,6 +57,8 @@ describe('HTTP transport OAuth', () => {
   });
 
   it('POST /mcp with invalid Bearer token returns 401', async () => {
+    // Mock the session-check fallback to also reject this token
+    fetchSpy.mockResolvedValueOnce(new Response(null, { status: 401 }));
     const res = await request(app)
       .post('/mcp')
       .set('Authorization', 'Bearer not-a-valid-token')
