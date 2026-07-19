@@ -5,6 +5,7 @@ import { registerUptimeTools } from './tools/uptime.js';
 import { registerMonitorTools } from './tools/monitors.js';
 import { registerHeartbeatTools } from './tools/heartbeats.js';
 import { registerOnCallTools } from './tools/on-call.js';
+import { registerResponseIncidentTools } from './tools/response-incidents.js';
 import { registerIntegrationTools } from './tools/integrations.js';
 import { registerStatusPageTools } from './tools/status-pages.js';
 import { registerSubscriptionTools } from './tools/subscriptions.js';
@@ -19,6 +20,7 @@ export function createServer(client: GetMonitorClient): McpServer {
   registerMonitorTools(server, client);
   registerHeartbeatTools(server, client);
   registerOnCallTools(server, client);
+  registerResponseIncidentTools(server, client);
   registerIntegrationTools(server, client);
   registerStatusPageTools(server, client);
   registerSubscriptionTools(server, client);
