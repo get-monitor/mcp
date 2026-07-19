@@ -485,6 +485,31 @@ describe('On-Call Tools', () => {
     });
   });
 
+  describe('get_oncall_alerts_stats', () => {
+    it('calls GET /api/v1/on-call/alerts/stats with the default window', async () => {
+      const responseData = { totalSent: 5, bySource: { monitor: 3, integration_installation: 2 } };
+      mockFetch.mockResolvedValueOnce(mockResponse(responseData));
+
+      const handler = getToolHandler(server, 'get_oncall_alerts_stats');
+      const result = await handler({});
+
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+      const [url] = mockFetch.mock.calls[0];
+      expect(url).toBe('https://api.example.com/api/v1/on-call/alerts/stats?window=24h');
+      expect(result).toEqual({ content: [{ type: 'text', text: JSON.stringify(responseData, null, 2) }] });
+    });
+
+    it('passes an explicit window through', async () => {
+      mockFetch.mockResolvedValueOnce(mockResponse({ totalSent: 0, bySource: { monitor: 0, integration_installation: 0 } }));
+
+      const handler = getToolHandler(server, 'get_oncall_alerts_stats');
+      await handler({ window: '24h' });
+
+      const [url] = mockFetch.mock.calls[0];
+      expect(url).toContain('window=24h');
+    });
+  });
+
   // ─── Error handling ───────────────────────────────────────────────────────
 
   describe('error handling', () => {

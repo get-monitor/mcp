@@ -259,4 +259,16 @@ export function registerOnCallTools(server: McpServer, client: GetMonitorClient)
         client.get('/api/v1/on-call/notifications', { limit, page, deliveryStatus, monitorId }),
       ),
   );
+
+  // ─── Alert stats ──────────────────────────────────────────────────────────
+
+  server.tool(
+    'get_oncall_alerts_stats',
+    'Get counts of on-call alerts sent in a time window, split by source (monitor vs external integration).',
+    {
+      window: z.enum(['24h']).optional().describe('Time window (currently only 24h is supported)'),
+    },
+    ({ window }) =>
+      callApi(() => client.get('/api/v1/on-call/alerts/stats', { window: window ?? '24h' })),
+  );
 }
