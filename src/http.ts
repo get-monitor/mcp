@@ -10,6 +10,24 @@ import { createServer } from "./server.js";
 
 const ISSUER = "https://mcp.getmonitor.io";
 
+/**
+ * Decide which organization an MCP session is scoped to.
+ *
+ * Callers pass the organization they are working in via X-Organization-Id.
+ * That header is client-supplied, so it only wins when the authenticated user
+ * is actually a member — otherwise a caller could read another tenant's data.
+ * Without a usable request we keep the historical behaviour and take the first
+ * organization, which is correct for single-org users.
+ */
+export function pickOrganizationId(
+  orgs: Array<{ id: string }>,
+  requestedId: string | undefined,
+): string | undefined {
+  const requested = requestedId?.trim();
+  if (requested && orgs.some((o) => o.id === requested)) return requested;
+  return orgs[0]?.id;
+}
+
 interface HttpAppOptions {
   apiUrl: string;
   appUrl: string;
@@ -224,11 +242,12 @@ export function createHttpApp(opts: HttpAppOptions): express.Express {
     // New session
     const sessionToken = (req as unknown as Record<string, unknown>)
       .sessionToken as string;
+    const requestedOrganizationId = req.headers["x-organization-id"] as string | undefined;
     const tempClient = new GetMonitorClient({ baseUrl: opts.apiUrl, token: sessionToken });
     let organizationId: string | undefined;
     try {
       const orgs = await tempClient.get<Array<{ id: string }>>('/api/v1/organizations');
-      organizationId = orgs[0]?.id;
+      organizationId = pickOrganizationId(orgs, requestedOrganizationId);
     } catch {
       // proceed without org ID — tools scoped to explicit IDs still work
     }
