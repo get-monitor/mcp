@@ -1,6 +1,6 @@
 # GetMonitor Full Management MCP Server
 
-Give AI assistants (Claude, Cursor, etc.) complete authenticated access to manage all GetMonitor resources — organizations, users, monitors, incidents, status pages, integrations, and more.
+Give AI assistants (Claude, Cursor, etc.) complete authenticated access to manage all GetMonitor resources — organizations, monitors, incident response, on-call, status pages, integrations, and more.
 
 Unlike the read-only public MCP server, this server provides full CRUD access to everything in GetMonitor, including privileged operations like organization management, subscription control, and incident management.
 
@@ -180,8 +180,8 @@ Public subscription management for status page updates, plus billing plan inform
 - _"Create a new status page for our company website and add my monitors to it"_
 - _"Add john@acme.com as a manager to my organization"_
 - _"Create an incident on my status page for a database outage and send notifications"_
-- _"Set up an on-call rotation with escalation to PagerDuty"_
-- _"Upload our company logo and use it to brand the status page"_
+- _"Set up an on-call rotation and schedule an override for next week"_
+- _"Draft a postmortem notebook for last night's outage and link it to the incident"_
 - _"Install the Slack integration and configure it to notify our #incidents channel"_
 - _"List all monitors and their current status across my organization"_
 - _"Create a maintenance window for next Tuesday and update subscribers"_
