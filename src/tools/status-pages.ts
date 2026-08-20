@@ -5,7 +5,9 @@ import { callApi, text, type ToolResponse } from './helpers.js';
 
 export function registerStatusPageTools(server: McpServer, client: GetMonitorClient): void {
   // -------------------------------------------------------------------------
-  // Public endpoints (read-only, no auth required but auth-aware)
+  // Public endpoints (read-only, no auth required but auth-aware) —
+  // except the "management maintenance/updates" block below, which is
+  // apiKey-secured despite sitting in this section for path proximity.
   // -------------------------------------------------------------------------
 
   server.tool(
@@ -127,8 +129,10 @@ export function registerStatusPageTools(server: McpServer, client: GetMonitorCli
       callApi(() => client.get(`/api/v1/status-pages/${id}/updates`, { limit, page })),
   );
 
-  // ─── Management maintenance/updates (distinct from the public-facing tools above —
-  //     same-looking path, different {statusPageId} vs {id} param and auth) ───
+  // -------------------------------------------------------------------------
+  // Management maintenance/updates (distinct from the public-facing tools
+  // above — same-looking path, different {statusPageId} vs {id} param and auth)
+  // -------------------------------------------------------------------------
 
   server.tool(
     'list_management_maintenance',
