@@ -11,6 +11,7 @@ import { registerStatusPageTools } from './tools/status-pages.js';
 import { registerSubscriptionTools } from './tools/subscriptions.js';
 import { registerProjectTools } from './tools/projects.js';
 import { registerNotebookTools } from './tools/notebooks.js';
+import { registerMemberTools } from './tools/members.js';
 
 export function createServer(client: GetMonitorClient): McpServer {
   const server = new McpServer({
@@ -28,5 +29,6 @@ export function createServer(client: GetMonitorClient): McpServer {
   registerSubscriptionTools(server, client);
   registerProjectTools(server, client);
   registerNotebookTools(server, client);
+  registerMemberTools(server, client);
   return server;
 }
