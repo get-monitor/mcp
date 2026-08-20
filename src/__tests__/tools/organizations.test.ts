@@ -274,36 +274,6 @@ describe('Organization Tools', () => {
     });
   });
 
-  describe('get_organization_subscription', () => {
-    it('calls GET /api/v1/organizations/{organizationId}/subscription', async () => {
-      const responseData = { plan: 'pro', status: 'active' };
-      mockFetch.mockResolvedValueOnce(mockResponse(responseData));
-
-      const handler = getToolHandler(server, 'get_organization_subscription');
-      const result = await handler({ organizationId: 'org-abc' });
-
-      expect(mockFetch).toHaveBeenCalledTimes(1);
-      const [url] = mockFetch.mock.calls[0];
-      expect(url).toBe('https://api.example.com/api/v1/organizations/org-abc/subscription');
-      expect(result).toEqual({ content: [{ type: 'text', text: JSON.stringify(responseData, null, 2) }] });
-    });
-  });
-
-  describe('get_organization_usage', () => {
-    it('calls GET /api/v1/organizations/{organizationId}/subscription/usage', async () => {
-      const responseData = { monitorsUsed: 5, monitorsLimit: 10 };
-      mockFetch.mockResolvedValueOnce(mockResponse(responseData));
-
-      const handler = getToolHandler(server, 'get_organization_usage');
-      const result = await handler({ organizationId: 'org-abc' });
-
-      expect(mockFetch).toHaveBeenCalledTimes(1);
-      const [url] = mockFetch.mock.calls[0];
-      expect(url).toBe('https://api.example.com/api/v1/organizations/org-abc/subscription/usage');
-      expect(result).toEqual({ content: [{ type: 'text', text: JSON.stringify(responseData, null, 2) }] });
-    });
-  });
-
   describe('get_invitation', () => {
     it('calls GET /api/v1/invitations/{invitationId}', async () => {
       const responseData = { id: 'inv-1', email: 'user@example.com', status: 'pending' };
@@ -330,6 +300,198 @@ describe('Organization Tools', () => {
       expect(mockFetch).toHaveBeenCalledTimes(1);
       const [url, options] = mockFetch.mock.calls[0];
       expect(url).toBe('https://api.example.com/api/v1/invitations/inv-1/accept');
+      expect(options.method).toBe('POST');
+      expect(result).toEqual({ content: [{ type: 'text', text: JSON.stringify(responseData, null, 2) }] });
+    });
+  });
+
+  describe('cancel_invitation', () => {
+    it('calls DELETE /api/v1/invitations/{invitationId}', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 204,
+        headers: new Map([['content-length', '0']]),
+        json: async () => null,
+      });
+
+      const handler = getToolHandler(server, 'cancel_invitation');
+      const result = await handler({ invitationId: 'inv-1' });
+
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+      const [url, options] = mockFetch.mock.calls[0];
+      expect(url).toBe('https://api.example.com/api/v1/invitations/inv-1');
+      expect(options.method).toBe('DELETE');
+      expect(result).toEqual({ content: [{ type: 'text', text: '' }] });
+    });
+  });
+
+  describe('delete_organization', () => {
+    it('calls DELETE /api/v1/organizations/{orgId}', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 204,
+        headers: new Map([['content-length', '0']]),
+        json: async () => null,
+      });
+
+      const handler = getToolHandler(server, 'delete_organization');
+      const result = await handler({ orgId: 'org-abc' });
+
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+      const [url, options] = mockFetch.mock.calls[0];
+      expect(url).toBe('https://api.example.com/api/v1/organizations/org-abc');
+      expect(options.method).toBe('DELETE');
+      expect(result).toEqual({ content: [{ type: 'text', text: '' }] });
+    });
+  });
+
+  describe('resolve_organization_by_slug', () => {
+    it('calls GET /api/v1/organizations/by-slug/{slug}', async () => {
+      const responseData = { id: 'org-abc', slug: 'my-org' };
+      mockFetch.mockResolvedValueOnce(mockResponse(responseData));
+
+      const handler = getToolHandler(server, 'resolve_organization_by_slug');
+      const result = await handler({ slug: 'my-org' });
+
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+      const [url] = mockFetch.mock.calls[0];
+      expect(url).toBe('https://api.example.com/api/v1/organizations/by-slug/my-org');
+      expect(result).toEqual({ content: [{ type: 'text', text: JSON.stringify(responseData, null, 2) }] });
+    });
+  });
+
+  describe('get_organization_onboarding_progress', () => {
+    it('calls GET /api/v1/organizations/{orgId}/onboarding-progress', async () => {
+      const responseData = { completedSteps: ['create-monitor'], totalSteps: 5 };
+      mockFetch.mockResolvedValueOnce(mockResponse(responseData));
+
+      const handler = getToolHandler(server, 'get_organization_onboarding_progress');
+      const result = await handler({ orgId: 'org-abc' });
+
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+      const [url] = mockFetch.mock.calls[0];
+      expect(url).toBe('https://api.example.com/api/v1/organizations/org-abc/onboarding-progress');
+      expect(result).toEqual({ content: [{ type: 'text', text: JSON.stringify(responseData, null, 2) }] });
+    });
+  });
+
+  describe('list_organization_teams', () => {
+    it('calls GET /api/v1/organizations/{orgId}/teams', async () => {
+      const responseData = [{ id: 'team-1', name: 'Platform' }];
+      mockFetch.mockResolvedValueOnce(mockResponse(responseData));
+
+      const handler = getToolHandler(server, 'list_organization_teams');
+      const result = await handler({ orgId: 'org-abc' });
+
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+      const [url] = mockFetch.mock.calls[0];
+      expect(url).toBe('https://api.example.com/api/v1/organizations/org-abc/teams');
+      expect(result).toEqual({ content: [{ type: 'text', text: JSON.stringify(responseData, null, 2) }] });
+    });
+  });
+
+  describe('create_organization_team', () => {
+    it('calls POST /api/v1/organizations/{orgId}/teams', async () => {
+      const responseData = { id: 'team-1', name: 'Platform' };
+      mockFetch.mockResolvedValueOnce(mockResponse(responseData, 201));
+
+      const handler = getToolHandler(server, 'create_organization_team');
+      const result = await handler({ orgId: 'org-abc', name: 'Platform', description: 'Platform team' });
+
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+      const [url, options] = mockFetch.mock.calls[0];
+      expect(url).toBe('https://api.example.com/api/v1/organizations/org-abc/teams');
+      expect(options.method).toBe('POST');
+      expect(JSON.parse(options.body)).toEqual({ name: 'Platform', description: 'Platform team' });
+      expect(result).toEqual({ content: [{ type: 'text', text: JSON.stringify(responseData, null, 2) }] });
+    });
+  });
+
+  describe('update_organization_team', () => {
+    it('calls PATCH /api/v1/organizations/{orgId}/teams/{teamId}', async () => {
+      const responseData = { id: 'team-1', name: 'Platform Eng' };
+      mockFetch.mockResolvedValueOnce(mockResponse(responseData));
+
+      const handler = getToolHandler(server, 'update_organization_team');
+      const result = await handler({ orgId: 'org-abc', teamId: 'team-1', name: 'Platform Eng' });
+
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+      const [url, options] = mockFetch.mock.calls[0];
+      expect(url).toBe('https://api.example.com/api/v1/organizations/org-abc/teams/team-1');
+      expect(options.method).toBe('PATCH');
+      expect(JSON.parse(options.body)).toMatchObject({ name: 'Platform Eng' });
+      expect(result).toEqual({ content: [{ type: 'text', text: JSON.stringify(responseData, null, 2) }] });
+    });
+  });
+
+  describe('delete_organization_team', () => {
+    it('calls DELETE /api/v1/organizations/{orgId}/teams/{teamId}', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 204,
+        headers: new Map([['content-length', '0']]),
+        json: async () => null,
+      });
+
+      const handler = getToolHandler(server, 'delete_organization_team');
+      const result = await handler({ orgId: 'org-abc', teamId: 'team-1' });
+
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+      const [url, options] = mockFetch.mock.calls[0];
+      expect(url).toBe('https://api.example.com/api/v1/organizations/org-abc/teams/team-1');
+      expect(options.method).toBe('DELETE');
+      expect(result).toEqual({ content: [{ type: 'text', text: '' }] });
+    });
+  });
+
+  describe('add_organization_team_member', () => {
+    it('calls POST /api/v1/organizations/{orgId}/teams/{teamId}/members', async () => {
+      const responseData = { userId: 'user-1', teamId: 'team-1' };
+      mockFetch.mockResolvedValueOnce(mockResponse(responseData, 201));
+
+      const handler = getToolHandler(server, 'add_organization_team_member');
+      const result = await handler({ orgId: 'org-abc', teamId: 'team-1', userId: 'user-1' });
+
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+      const [url, options] = mockFetch.mock.calls[0];
+      expect(url).toBe('https://api.example.com/api/v1/organizations/org-abc/teams/team-1/members');
+      expect(options.method).toBe('POST');
+      expect(JSON.parse(options.body)).toEqual({ userId: 'user-1' });
+      expect(result).toEqual({ content: [{ type: 'text', text: JSON.stringify(responseData, null, 2) }] });
+    });
+  });
+
+  describe('remove_organization_team_member', () => {
+    it('calls DELETE /api/v1/organizations/{orgId}/teams/{teamId}/members/{userId}', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        status: 204,
+        headers: new Map([['content-length', '0']]),
+        json: async () => null,
+      });
+
+      const handler = getToolHandler(server, 'remove_organization_team_member');
+      const result = await handler({ orgId: 'org-abc', teamId: 'team-1', userId: 'user-1' });
+
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+      const [url, options] = mockFetch.mock.calls[0];
+      expect(url).toBe('https://api.example.com/api/v1/organizations/org-abc/teams/team-1/members/user-1');
+      expect(options.method).toBe('DELETE');
+      expect(result).toEqual({ content: [{ type: 'text', text: '' }] });
+    });
+  });
+
+  describe('backfill_organization_teams', () => {
+    it('calls POST /api/v1/organizations/{orgId}/teams/backfill', async () => {
+      const responseData = { created: 3 };
+      mockFetch.mockResolvedValueOnce(mockResponse(responseData, 201));
+
+      const handler = getToolHandler(server, 'backfill_organization_teams');
+      const result = await handler({ orgId: 'org-abc' });
+
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+      const [url, options] = mockFetch.mock.calls[0];
+      expect(url).toBe('https://api.example.com/api/v1/organizations/org-abc/teams/backfill');
       expect(options.method).toBe('POST');
       expect(result).toEqual({ content: [{ type: 'text', text: JSON.stringify(responseData, null, 2) }] });
     });

@@ -5,6 +5,15 @@ import { callApi, text, type ToolResponse } from './helpers.js';
 
 export function registerOrganizationTools(server: McpServer, client: GetMonitorClient): void {
   server.tool(
+    'check_organization_slug',
+    'Check whether an organization slug is available for use.',
+    {
+      slug: z.string().describe('The organization slug to check for availability'),
+    },
+    ({ slug }) => callApi(() => client.get('/api/v1/organizations/check-slug', { slug })),
+  );
+
+  server.tool(
     'create_organization',
     'Create a new organization.',
     {
@@ -23,6 +32,20 @@ export function registerOrganizationTools(server: McpServer, client: GetMonitorC
     'List all organizations the authenticated user belongs to.',
     {},
     () => callApi(() => client.get('/api/v1/organizations')),
+  );
+
+  server.tool(
+    'list_guest_access_organizations',
+    'List organizations the authenticated user has guest access to.',
+    {},
+    () => callApi(() => client.get('/api/v1/organizations/guest-access')),
+  );
+
+  server.tool(
+    'get_user_organization_roles',
+    'Get the roles the authenticated user has across all organizations.',
+    {},
+    () => callApi(() => client.get('/api/v1/organizations/roles')),
   );
 
   server.tool(
@@ -64,6 +87,17 @@ export function registerOrganizationTools(server: McpServer, client: GetMonitorC
     },
     ({ orgId, name, logo, email, phoneNumber }) =>
       callApi(() => client.patch(`/api/v1/organizations/${orgId}`, { name, logo, email, phoneNumber })),
+  );
+
+  server.tool(
+    'update_organization_language',
+    'Update the default language setting for a specific organization.',
+    {
+      orgId: z.string().describe('The organization ID'),
+      language: z.enum(['en-US', 'pt-BR']).describe('The language code to set as the organization default (en-US or pt-BR)'),
+    },
+    ({ orgId, language }) =>
+      callApi(() => client.patch(`/api/v1/organizations/${orgId}/language`, { language })),
   );
 
   server.tool(
@@ -111,23 +145,138 @@ export function registerOrganizationTools(server: McpServer, client: GetMonitorC
   );
 
   server.tool(
-    'get_organization_subscription',
-    'Get subscription details for a specific organization.',
+    'delete_organization',
+    'Delete a specific organization.',
     {
-      organizationId: z.string().describe('The organization ID'),
+      orgId: z.string().describe('The organization ID'),
     },
-    ({ organizationId }) =>
-      callApi(() => client.get(`/api/v1/organizations/${organizationId}/subscription`)),
+    ({ orgId }) => callApi(() => client.delete(`/api/v1/organizations/${orgId}`)),
   );
 
   server.tool(
-    'get_organization_usage',
-    'Get usage statistics for a specific organization subscription.',
+    'resolve_organization_by_slug',
+    'Resolve an organization by its slug.',
     {
-      organizationId: z.string().describe('The organization ID'),
+      slug: z.string().describe('The organization slug'),
     },
-    ({ organizationId }) =>
-      callApi(() => client.get(`/api/v1/organizations/${organizationId}/subscription/usage`)),
+    ({ slug }) => callApi(() => client.get(`/api/v1/organizations/by-slug/${slug}`)),
+  );
+
+  server.tool(
+    'get_organization_onboarding_progress',
+    'Get the onboarding progress for a specific organization.',
+    {
+      orgId: z.string().describe('The organization ID'),
+    },
+    ({ orgId }) => callApi(() => client.get(`/api/v1/organizations/${orgId}/onboarding-progress`)),
+  );
+
+  server.tool(
+    'get_invitation',
+    'Get details about a specific invitation.',
+    {
+      invitationId: z.string().describe('The invitation ID'),
+    },
+    ({ invitationId }) =>
+      callApi(() => client.get(`/api/v1/invitations/${invitationId}`)),
+  );
+
+  server.tool(
+    'accept_invitation',
+    'Accept a pending organization invitation.',
+    {
+      invitationId: z.string().describe('The invitation ID to accept'),
+    },
+    ({ invitationId }) =>
+      callApi(() => client.post(`/api/v1/invitations/${invitationId}/accept`, {})),
+  );
+
+  server.tool(
+    'cancel_invitation',
+    'Cancel a pending organization invitation.',
+    {
+      invitationId: z.string().describe('The invitation ID to cancel'),
+    },
+    ({ invitationId }) =>
+      callApi(() => client.delete(`/api/v1/invitations/${invitationId}`)),
+  );
+
+  server.tool(
+    'list_organization_teams',
+    'List all teams within a specific organization.',
+    {
+      orgId: z.string().describe('The organization ID'),
+    },
+    ({ orgId }) => callApi(() => client.get(`/api/v1/organizations/${orgId}/teams`)),
+  );
+
+  server.tool(
+    'create_organization_team',
+    'Create a new team within a specific organization.',
+    {
+      orgId: z.string().describe('The organization ID'),
+      name: z.string().describe('Display name of the team'),
+      description: z.string().optional().describe('Description of the team'),
+    },
+    ({ orgId, name, description }) =>
+      callApi(() => client.post(`/api/v1/organizations/${orgId}/teams`, { name, description })),
+  );
+
+  server.tool(
+    'update_organization_team',
+    'Update details of a specific team within an organization.',
+    {
+      orgId: z.string().describe('The organization ID'),
+      teamId: z.string().describe('The team ID'),
+      name: z.string().optional().describe('New display name for the team'),
+      description: z.string().optional().describe('New description for the team'),
+    },
+    ({ orgId, teamId, name, description }) =>
+      callApi(() => client.patch(`/api/v1/organizations/${orgId}/teams/${teamId}`, { name, description })),
+  );
+
+  server.tool(
+    'delete_organization_team',
+    'Delete a specific team within an organization.',
+    {
+      orgId: z.string().describe('The organization ID'),
+      teamId: z.string().describe('The team ID'),
+    },
+    ({ orgId, teamId }) =>
+      callApi(() => client.delete(`/api/v1/organizations/${orgId}/teams/${teamId}`)),
+  );
+
+  server.tool(
+    'add_organization_team_member',
+    'Add a member to a specific team within an organization.',
+    {
+      orgId: z.string().describe('The organization ID'),
+      teamId: z.string().describe('The team ID'),
+      userId: z.string().describe('The user ID of the member to add'),
+    },
+    ({ orgId, teamId, userId }) =>
+      callApi(() => client.post(`/api/v1/organizations/${orgId}/teams/${teamId}/members`, { userId })),
+  );
+
+  server.tool(
+    'remove_organization_team_member',
+    'Remove a member from a specific team within an organization.',
+    {
+      orgId: z.string().describe('The organization ID'),
+      teamId: z.string().describe('The team ID'),
+      userId: z.string().describe('The user ID of the member to remove'),
+    },
+    ({ orgId, teamId, userId }) =>
+      callApi(() => client.delete(`/api/v1/organizations/${orgId}/teams/${teamId}/members/${userId}`)),
+  );
+
+  server.tool(
+    'backfill_organization_teams',
+    'Backfill default teams for a specific organization.',
+    {
+      orgId: z.string().describe('The organization ID'),
+    },
+    ({ orgId }) => callApi(() => client.post(`/api/v1/organizations/${orgId}/teams/backfill`, {})),
   );
 
 }
