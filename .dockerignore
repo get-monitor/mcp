@@ -4,3 +4,4 @@ src/__tests__
 *.test.ts
 .git
 docs
+pnpm-workspace.yaml

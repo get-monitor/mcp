@@ -6,3 +6,4 @@ docs/superpowers/
 config/
 .npmrc
 .worktrees/
+pnpm-workspace.yaml
