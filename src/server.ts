@@ -16,7 +16,7 @@ import { registerMemberTools } from './tools/members.js';
 export function createServer(client: GetMonitorClient): McpServer {
   const server = new McpServer({
     name: 'GetMonitor',
-    version: '0.1.0',
+    version: '0.3.0',
   });
   registerOrganizationTools(server, client);
   registerUptimeTools(server, client);
