@@ -66,36 +66,23 @@ export GETMONITOR_API_URL=https://api.getmonitor.io  # default
 
 All tools require authentication. Your API key or session token must be associated with an account that has the necessary permissions on the organization or resources.
 
-### Organizations (16 tools)
+### Organizations (27 tools)
 
-Manage organization settings, members, invitations, roles, and billing subscription.
+Manage organization settings, teams, members, invitations, and roles.
 
-- Create, read, update, delete organizations
-- Manage organization members and their roles
-- Send and manage member invitations
-- Update subscription plans and billing
+- Create, read, update, delete organizations, and check slug availability
+- List organizations and guest-access organizations, and resolve by slug
+- Manage organization members, roles, and invitations (send, view, accept, cancel)
+- Create and manage teams and team membership
+- Track organization status and onboarding progress
 
-### Users (13 tools)
+### Projects (9 tools)
 
-Manage your user account, sessions, and connected OAuth apps.
+Manage projects and source-map upload tokens for error tracking ingestion.
 
-- View and update profile information
-- List and revoke active sessions
-- Link and unlink OAuth accounts (GitHub, Google, etc.)
-- Manage API keys
-
-### Images (7 tools)
-
-Upload and manage images for status page branding and components.
-
-- Upload images with metadata
-- Replace existing images
-- Delete images
-- List images with metadata
-
-### Onboarding (1 tool)
-
-- Complete the GetMonitor onboarding flow for new accounts
+- Create, read, update, delete projects
+- Rotate project ingestion keys
+- Create, list, and revoke source-map tokens
 
 ### Uptime Monitors (7 tools)
 
@@ -123,47 +110,70 @@ Create and manage heartbeat monitors including pause/unpause and token regenerat
 - Regenerate monitor tokens
 - Get heartbeat check history
 
-### On-Call (26 tools)
+### On-Call (21 tools)
 
-Full management of on-call teams, members, schedules, policies, and monitor assignments.
+Manage on-call rotations, schedules, routing, and alerts.
 
-- Create and manage on-call teams
-- Add and remove team members
-- Create and manage schedules
-- Define and apply escalation policies
-- Assign monitors to on-call workflows
-- Manage notification channels and destinations
+- Create and manage rotations and rotation members
+- Manage schedules and schedule overrides, and query who's on call
+- Configure notification routes for on-call escalation
+- List, acknowledge, and resolve on-call alerts, and view alert stats
 
-### Integrations (16 tools)
+### Incident Response (40 tools)
+
+Full incident-response lifecycle management, from declaration through postmortem.
+
+- Create, update, resolve, and close incidents; view overview stats
+- Assign roles, link affected services, and set incident types
+- Publish status updates, with AI-generated summaries and drafts
+- Manage incident actions (action items) and custom fields
+- Configure escalations and manage incident type definitions
+- Link notebooks, track participants (join/leave), and related incidents
+- Record timeline notes throughout the incident
+
+### Integrations (12 tools)
 
 Discover, install, and configure integration apps for incident notifications and status syncing.
 
-- Browse available integration apps
-- Install and uninstall apps
-- Create and manage destination configurations
-- Test and preview integration templates
-- List installed apps and their configurations
+- Browse available integration apps and view app details
+- Install, configure, and disable integrations
+- Create, update, and delete destination configurations
+- Check installation health status
 
 ### Status Pages (60 tools)
 
-Full lifecycle management of status pages including components, incidents, maintenance, domains, and subscribers.
+Full lifecycle management of status pages including components, updates, maintenance, domains, and subscribers.
 
-- Create, read, update, delete status pages
-- Manage custom domains and branding
-- Create and manage component groups and static components
-- Attach monitors to status pages
-- Create and update incidents with updates
-- Create and manage maintenance windows
-- List and manage status page subscribers
-- Customize status page appearance and notifications
+- Create, read, update, delete status pages, and check domain availability
+- Manage custom domains (set, remove, verify) and page customization/branding
+- Create and manage component groups and static components, and attach monitors
+- Create and manage maintenance windows (start, complete, cancel) and post updates
+- Create and manage status page updates
+- List, remove, and export status page subscribers, with subscription analytics
+- View status badges and aggregated monitor status
+
+### Notebooks (7 tools)
+
+Incident postmortem and runbook documents, including AI-assisted drafting.
+
+- Create, read, update, delete notebooks
+- Generate AI-drafted notebook content
+- List available notebook templates
+
+### Members (4 tools)
+
+Manage your personal notification contact methods.
+
+- List your contact methods
+- Create, update, and remove contact methods (Slack, email, SMS)
 
 ### Subscriptions (6 tools)
 
-Public subscription management and pricing information.
+Public subscription management for status page updates, plus billing plan information.
 
-- List available subscription plans
-- Get subscription details and current usage
-- Manage subscriber email preferences
+- Subscribe to status page updates and verify/confirm the subscription
+- Unsubscribe from status page notifications
+- List available billing subscription plans
 
 ## Example prompts
 
