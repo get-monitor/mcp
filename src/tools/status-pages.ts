@@ -72,30 +72,13 @@ export function registerStatusPageTools(server: McpServer, client: GetMonitorCli
   );
 
   server.tool(
-    'list_status_page_incidents',
-    'List incidents for a status page.',
+    'check_status_page_domain_availability',
+    'Check whether a status page slug/domain is available.',
     {
-      id: z.string().describe('The status page ID'),
-      limit: z.number().optional().describe('Maximum number of incidents to return'),
-      page: z.number().optional().describe('Page number for pagination'),
-      status: z.string().optional().describe('Filter incidents by status'),
-      active: z.boolean().optional().describe('If true, return only active (non-resolved) incidents'),
+      slug: z.string().describe('The slug to check for availability'),
     },
-    ({ id, limit, page, status, active }) =>
-      callApi(() =>
-        client.get(`/api/v1/status-pages/${id}/incidents`, { limit, page, status, active }),
-      ),
-  );
-
-  server.tool(
-    'get_status_page_incident',
-    'Get details about a specific incident on a status page.',
-    {
-      id: z.string().describe('The status page ID'),
-      incidentId: z.string().describe('The incident ID'),
-    },
-    ({ id, incidentId }) =>
-      callApi(() => client.get(`/api/v1/status-pages/${id}/incidents/${incidentId}`)),
+    ({ slug }) =>
+      callApi(() => client.get('/api/v1/status-pages/domain/availability', { slug })),
   );
 
   server.tool(
@@ -142,6 +125,55 @@ export function registerStatusPageTools(server: McpServer, client: GetMonitorCli
     },
     ({ id, limit, page }) =>
       callApi(() => client.get(`/api/v1/status-pages/${id}/updates`, { limit, page })),
+  );
+
+  // ─── Management maintenance/updates (distinct from the public-facing tools above —
+  //     same-looking path, different {statusPageId} vs {id} param and auth) ───
+
+  server.tool(
+    'list_management_maintenance',
+    'List maintenance windows for a status page (management API).',
+    {
+      statusPageId: z.string().describe('The status page ID'),
+      status: z
+        .string()
+        .optional()
+        .describe('Filter by maintenance status (scheduled, in_progress, completed, cancelled)'),
+      page: z.string().optional().describe('Page number for pagination'),
+      limit: z.string().optional().describe('Maximum number of items to return'),
+    },
+    ({ statusPageId, status, page, limit }) =>
+      callApi(() =>
+        client.get(`/api/v1/status-pages/${statusPageId}/maintenance`, { status, page, limit }),
+      ),
+  );
+
+  server.tool(
+    'get_management_maintenance',
+    'Get details about a specific maintenance window on a status page (management API).',
+    {
+      statusPageId: z.string().describe('The status page ID'),
+      maintenanceId: z.string().describe('The maintenance ID'),
+    },
+    ({ statusPageId, maintenanceId }) =>
+      callApi(() =>
+        client.get(`/api/v1/status-pages/${statusPageId}/maintenance/${maintenanceId}`),
+      ),
+  );
+
+  server.tool(
+    'list_management_status_page_updates',
+    'List updates (incident/maintenance posts) for a status page (management API).',
+    {
+      statusPageId: z.string().describe('The status page ID'),
+      state: z.enum(['draft', 'published']).optional().describe('Filter by update state'),
+      page: z.string().optional().describe('Page number for pagination'),
+      limit: z.string().optional().describe('Maximum number of items to return'),
+    },
+    ({ statusPageId, state, page, limit }) =>
+      callApi(() =>
+        client.get(`/api/v1/status-pages/${statusPageId}/updates`, { state, page, limit }),
+      ),
   );
 
   server.tool(
@@ -455,6 +487,22 @@ export function registerStatusPageTools(server: McpServer, client: GetMonitorCli
       ),
   );
 
+  server.tool(
+    'update_status_page_monitor',
+    'Update display settings for a monitor linked to a status page.',
+    {
+      statusPageId: z.string().describe('The status page ID'),
+      monitorId: z.string().describe('The monitor ID'),
+      displayName: z.string().optional().describe('Custom display name for the monitor on the status page'),
+    },
+    ({ statusPageId, monitorId, displayName }) =>
+      callApi(() =>
+        client.patch(`/api/v1/status-pages/${statusPageId}/monitors/${monitorId}`, {
+          displayName,
+        }),
+      ),
+  );
+
   // -------------------------------------------------------------------------
   // Management — Static Components
   // -------------------------------------------------------------------------
@@ -556,102 +604,6 @@ export function registerStatusPageTools(server: McpServer, client: GetMonitorCli
         client.get(
           `/api/v1/status-pages/${statusPageId}/static-components/${componentId}/overrides/${date}`,
         ),
-      ),
-  );
-
-  // -------------------------------------------------------------------------
-  // Management — Incidents
-  // -------------------------------------------------------------------------
-
-  server.tool(
-    'create_incident',
-    'Create a new incident on a status page.',
-    {
-      statusPageId: z.string().describe('The status page ID'),
-      title: z.string().optional().describe('Title of the incident'),
-      status: z.string().optional().describe('Status of the incident (e.g. investigating, identified, monitoring, resolved)'),
-      message: z.string().optional().describe('Initial message or description of the incident'),
-      affectedComponents: z.array(z.record(z.string(), z.unknown())).optional().describe('List of affected components'),
-    },
-    ({ statusPageId, ...rest }) =>
-      callApi(() => client.post(`/api/v1/status-pages/${statusPageId}/incidents`, rest)),
-  );
-
-  server.tool(
-    'update_incident',
-    'Update an existing incident on a status page.',
-    {
-      statusPageId: z.string().describe('The status page ID'),
-      incidentId: z.string().describe('The incident ID'),
-      data: z.record(z.unknown()).describe('Incident fields to update'),
-    },
-    ({ statusPageId, incidentId, data }) =>
-      callApi(() =>
-        client.patch(`/api/v1/status-pages/${statusPageId}/incidents/${incidentId}`, data),
-      ),
-  );
-
-  server.tool(
-    'delete_incident',
-    'Delete an incident from a status page.',
-    {
-      statusPageId: z.string().describe('The status page ID'),
-      incidentId: z.string().describe('The incident ID'),
-    },
-    ({ statusPageId, incidentId }) =>
-      callApi(() =>
-        client.delete(`/api/v1/status-pages/${statusPageId}/incidents/${incidentId}`),
-      ),
-  );
-
-  server.tool(
-    'resolve_incident',
-    'Resolve an incident on a status page.',
-    {
-      statusPageId: z.string().describe('The status page ID'),
-      incidentId: z.string().describe('The incident ID'),
-    },
-    ({ statusPageId, incidentId }) =>
-      callApi(() =>
-        client.post(
-          `/api/v1/status-pages/${statusPageId}/incidents/${incidentId}/resolve`,
-          {},
-        ),
-      ),
-  );
-
-  server.tool(
-    'add_incident_update',
-    'Add an update (post) to an existing incident on a status page.',
-    {
-      statusPageId: z.string().describe('The status page ID'),
-      incidentId: z.string().describe('The incident ID'),
-      data: z.record(z.unknown()).describe('Update fields (e.g. message, status)'),
-    },
-    ({ statusPageId, incidentId, data }) =>
-      callApi(() =>
-        client.post(
-          `/api/v1/status-pages/${statusPageId}/incidents/${incidentId}/updates`,
-          data,
-        ),
-      ),
-  );
-
-  server.tool(
-    'get_status_page_health_score',
-    'Get the health score for a status page over a time range.',
-    {
-      statusPageId: z.string().describe('The status page ID'),
-      timeRange: z
-        .enum(['24h', '7d', '30d'])
-        .optional()
-        .describe('Time range for the health score (24h, 7d, or 30d)'),
-    },
-    ({ statusPageId, timeRange }) =>
-      callApi(() =>
-        client.get(`/api/v1/status-pages/${statusPageId}/incidents/health-score`, {
-          timeRange,
-        }),
       ),
   );
 
@@ -772,6 +724,88 @@ export function registerStatusPageTools(server: McpServer, client: GetMonitorCli
           `/api/v1/status-pages/${statusPageId}/maintenance/${maintenanceId}/cancel`,
           {},
         ),
+      ),
+  );
+
+  // -------------------------------------------------------------------------
+  // Management — Status Page Updates
+  // -------------------------------------------------------------------------
+
+  server.tool(
+    'create_status_page_update',
+    'Create a new update (incident, maintenance, or informational post) on a status page.',
+    {
+      statusPageId: z.string().describe('The status page ID'),
+      title: z.string().describe('Title of the update'),
+      body: z.string().describe('Body content of the update'),
+      state: z.enum(['draft', 'published']).describe('Whether the update is a draft or published'),
+      updateType: z
+        .enum(['incident', 'maintenance', 'informational'])
+        .describe('The type of update'),
+      impact: z
+        .enum(['none', 'minor', 'major', 'critical'])
+        .describe('The impact level of the update'),
+      components: z
+        .array(
+          z.object({
+            monitorId: z.string().optional().describe('The monitor ID this component status applies to'),
+            staticComponentId: z
+              .string()
+              .optional()
+              .describe('The static component ID this status applies to'),
+            status: z
+              .enum(['operational', 'degraded', 'partial_outage', 'major_outage'])
+              .describe('The status to set for this component'),
+          }),
+        )
+        .optional()
+        .describe('Component status changes associated with this update'),
+    },
+    ({ statusPageId, ...rest }) =>
+      callApi(() => client.post(`/api/v1/status-pages/${statusPageId}/updates`, rest)),
+  );
+
+  server.tool(
+    'get_status_page_update',
+    'Get details about a specific update on a status page.',
+    {
+      statusPageId: z.string().describe('The status page ID'),
+      updateId: z.string().describe('The update ID'),
+    },
+    ({ statusPageId, updateId }) =>
+      callApi(() => client.get(`/api/v1/status-pages/${statusPageId}/updates/${updateId}`)),
+  );
+
+  server.tool(
+    'update_status_page_update',
+    'Update an existing update on a status page.',
+    {
+      statusPageId: z.string().describe('The status page ID'),
+      updateId: z.string().describe('The update ID'),
+      title: z.string().optional().describe('Title of the update'),
+      body: z.string().optional().describe('Body content of the update'),
+      state: z.enum(['draft', 'published']).optional().describe('Whether the update is a draft or published'),
+      impact: z
+        .enum(['none', 'minor', 'major', 'critical'])
+        .optional()
+        .describe('The impact level of the update'),
+    },
+    ({ statusPageId, updateId, ...rest }) =>
+      callApi(() =>
+        client.patch(`/api/v1/status-pages/${statusPageId}/updates/${updateId}`, rest),
+      ),
+  );
+
+  server.tool(
+    'delete_status_page_update',
+    'Delete an update from a status page.',
+    {
+      statusPageId: z.string().describe('The status page ID'),
+      updateId: z.string().describe('The update ID'),
+    },
+    ({ statusPageId, updateId }) =>
+      callApi(() =>
+        client.delete(`/api/v1/status-pages/${statusPageId}/updates/${updateId}`),
       ),
   );
 

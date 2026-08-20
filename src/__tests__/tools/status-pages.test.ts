@@ -157,37 +157,6 @@ describe('Status Page Tools', () => {
     });
   });
 
-  describe('list_status_page_incidents', () => {
-    it('calls GET /api/v1/status-pages/{id}/incidents', async () => {
-      const responseData = [{ id: 'inc-1', title: 'API slowdown' }];
-      mockFetch.mockResolvedValueOnce(mockResponse(responseData));
-
-      const handler = getToolHandler(server, 'list_status_page_incidents');
-      const result = await handler({ id: 'sp-1', limit: 10, page: 1 });
-
-      expect(mockFetch).toHaveBeenCalledTimes(1);
-      const [url] = mockFetch.mock.calls[0];
-      expect(url).toContain('/api/v1/status-pages/sp-1/incidents');
-      expect(url).toContain('limit=10');
-      expect(result).toEqual({ content: [{ type: 'text', text: JSON.stringify(responseData, null, 2) }] });
-    });
-  });
-
-  describe('get_status_page_incident', () => {
-    it('calls GET /api/v1/status-pages/{id}/incidents/{incidentId}', async () => {
-      const responseData = { id: 'inc-1', title: 'API slowdown' };
-      mockFetch.mockResolvedValueOnce(mockResponse(responseData));
-
-      const handler = getToolHandler(server, 'get_status_page_incident');
-      const result = await handler({ id: 'sp-1', incidentId: 'inc-1' });
-
-      expect(mockFetch).toHaveBeenCalledTimes(1);
-      const [url] = mockFetch.mock.calls[0];
-      expect(url).toBe('https://api.example.com/api/v1/status-pages/sp-1/incidents/inc-1');
-      expect(result).toEqual({ content: [{ type: 'text', text: JSON.stringify(responseData, null, 2) }] });
-    });
-  });
-
   describe('list_status_page_maintenance', () => {
     it('calls GET /api/v1/status-pages/{id}/maintenance', async () => {
       const responseData = [{ id: 'maint-1', title: 'Scheduled downtime' }];
@@ -747,110 +716,6 @@ describe('Status Page Tools', () => {
   });
 
   // -------------------------------------------------------------------------
-  // Management — Incidents
-  // -------------------------------------------------------------------------
-
-  describe('create_incident', () => {
-    it('calls POST /api/v1/status-pages/{statusPageId}/incidents', async () => {
-      const responseData = { id: 'inc-new', title: 'Database outage' };
-      mockFetch.mockResolvedValueOnce(mockResponse(responseData, 201));
-
-      const handler = getToolHandler(server, 'create_incident');
-      const result = await handler({ statusPageId: 'sp-1', title: 'Database outage' });
-
-      expect(mockFetch).toHaveBeenCalledTimes(1);
-      const [url, options] = mockFetch.mock.calls[0];
-      expect(url).toBe('https://api.example.com/api/v1/status-pages/sp-1/incidents');
-      expect(options.method).toBe('POST');
-      expect(JSON.parse(options.body)).toMatchObject({ title: 'Database outage' });
-      expect(result).toEqual({ content: [{ type: 'text', text: JSON.stringify(responseData, null, 2) }] });
-    });
-  });
-
-  describe('update_incident', () => {
-    it('calls PATCH /api/v1/status-pages/{statusPageId}/incidents/{incidentId}', async () => {
-      const responseData = { id: 'inc-1', status: 'resolved' };
-      mockFetch.mockResolvedValueOnce(mockResponse(responseData));
-
-      const handler = getToolHandler(server, 'update_incident');
-      const result = await handler({ statusPageId: 'sp-1', incidentId: 'inc-1', data: { status: 'resolved' } });
-
-      expect(mockFetch).toHaveBeenCalledTimes(1);
-      const [url, options] = mockFetch.mock.calls[0];
-      expect(url).toBe('https://api.example.com/api/v1/status-pages/sp-1/incidents/inc-1');
-      expect(options.method).toBe('PATCH');
-      expect(result).toEqual({ content: [{ type: 'text', text: JSON.stringify(responseData, null, 2) }] });
-    });
-  });
-
-  describe('delete_incident', () => {
-    it('calls DELETE /api/v1/status-pages/{statusPageId}/incidents/{incidentId}', async () => {
-      mockFetch.mockResolvedValueOnce(mockEmpty());
-
-      const handler = getToolHandler(server, 'delete_incident');
-      const result = await handler({ statusPageId: 'sp-1', incidentId: 'inc-1' });
-
-      expect(mockFetch).toHaveBeenCalledTimes(1);
-      const [url, options] = mockFetch.mock.calls[0];
-      expect(url).toBe('https://api.example.com/api/v1/status-pages/sp-1/incidents/inc-1');
-      expect(options.method).toBe('DELETE');
-      expect(result).toEqual({ content: [{ type: 'text', text: '' }] });
-    });
-  });
-
-  describe('resolve_incident', () => {
-    it('calls POST /api/v1/status-pages/{statusPageId}/incidents/{incidentId}/resolve', async () => {
-      const responseData = { id: 'inc-1', status: 'resolved' };
-      mockFetch.mockResolvedValueOnce(mockResponse(responseData));
-
-      const handler = getToolHandler(server, 'resolve_incident');
-      const result = await handler({ statusPageId: 'sp-1', incidentId: 'inc-1' });
-
-      expect(mockFetch).toHaveBeenCalledTimes(1);
-      const [url, options] = mockFetch.mock.calls[0];
-      expect(url).toBe('https://api.example.com/api/v1/status-pages/sp-1/incidents/inc-1/resolve');
-      expect(options.method).toBe('POST');
-      expect(result).toEqual({ content: [{ type: 'text', text: JSON.stringify(responseData, null, 2) }] });
-    });
-  });
-
-  describe('add_incident_update', () => {
-    it('calls POST /api/v1/status-pages/{statusPageId}/incidents/{incidentId}/updates', async () => {
-      const responseData = { id: 'upd-1', message: 'We are still investigating' };
-      mockFetch.mockResolvedValueOnce(mockResponse(responseData, 201));
-
-      const handler = getToolHandler(server, 'add_incident_update');
-      const result = await handler({
-        statusPageId: 'sp-1',
-        incidentId: 'inc-1',
-        data: { message: 'We are still investigating' },
-      });
-
-      expect(mockFetch).toHaveBeenCalledTimes(1);
-      const [url, options] = mockFetch.mock.calls[0];
-      expect(url).toBe('https://api.example.com/api/v1/status-pages/sp-1/incidents/inc-1/updates');
-      expect(options.method).toBe('POST');
-      expect(result).toEqual({ content: [{ type: 'text', text: JSON.stringify(responseData, null, 2) }] });
-    });
-  });
-
-  describe('get_status_page_health_score', () => {
-    it('calls GET /api/v1/status-pages/{statusPageId}/incidents/health-score', async () => {
-      const responseData = { score: 98.5 };
-      mockFetch.mockResolvedValueOnce(mockResponse(responseData));
-
-      const handler = getToolHandler(server, 'get_status_page_health_score');
-      const result = await handler({ statusPageId: 'sp-1', timeRange: '30d' });
-
-      expect(mockFetch).toHaveBeenCalledTimes(1);
-      const [url] = mockFetch.mock.calls[0];
-      expect(url).toContain('/api/v1/status-pages/sp-1/incidents/health-score');
-      expect(url).toContain('timeRange=30d');
-      expect(result).toEqual({ content: [{ type: 'text', text: JSON.stringify(responseData, null, 2) }] });
-    });
-  });
-
-  // -------------------------------------------------------------------------
   // Management — Maintenance
   // -------------------------------------------------------------------------
 
@@ -1036,6 +901,167 @@ describe('Status Page Tools', () => {
       expect(mockFetch).toHaveBeenCalledTimes(1);
       const [url] = mockFetch.mock.calls[0];
       expect(url).toBe('https://api.example.com/api/v1/status-pages/sp-1/subscriptions/analytics');
+      expect(result).toEqual({ content: [{ type: 'text', text: JSON.stringify(responseData, null, 2) }] });
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // Management — Monitor display name, Status Page Updates
+  // -------------------------------------------------------------------------
+
+  describe('update_status_page_monitor', () => {
+    it('calls PATCH /api/v1/status-pages/{statusPageId}/monitors/{monitorId}', async () => {
+      const responseData = { id: 'mon-1', displayName: 'API Gateway' };
+      mockFetch.mockResolvedValueOnce(mockResponse(responseData));
+
+      const handler = getToolHandler(server, 'update_status_page_monitor');
+      const result = await handler({ statusPageId: 'sp-1', monitorId: 'mon-1', displayName: 'API Gateway' });
+
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+      const [url, options] = mockFetch.mock.calls[0];
+      expect(url).toBe('https://api.example.com/api/v1/status-pages/sp-1/monitors/mon-1');
+      expect(options.method).toBe('PATCH');
+      expect(JSON.parse(options.body)).toEqual({ displayName: 'API Gateway' });
+      expect(result).toEqual({ content: [{ type: 'text', text: JSON.stringify(responseData, null, 2) }] });
+    });
+  });
+
+  describe('create_status_page_update', () => {
+    it('calls POST /api/v1/status-pages/{statusPageId}/updates', async () => {
+      const responseData = { id: 'update-1', title: 'Scheduled maintenance' };
+      mockFetch.mockResolvedValueOnce(mockResponse(responseData, 201));
+
+      const handler = getToolHandler(server, 'create_status_page_update');
+      const result = await handler({
+        statusPageId: 'sp-1',
+        title: 'Scheduled maintenance',
+        body: 'We are performing maintenance',
+        state: 'published',
+        updateType: 'maintenance',
+        impact: 'minor',
+        components: [{ monitorId: 'mon-1', status: 'degraded' }],
+      });
+
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+      const [url, options] = mockFetch.mock.calls[0];
+      expect(url).toBe('https://api.example.com/api/v1/status-pages/sp-1/updates');
+      expect(options.method).toBe('POST');
+      expect(JSON.parse(options.body)).toEqual({
+        title: 'Scheduled maintenance',
+        body: 'We are performing maintenance',
+        state: 'published',
+        updateType: 'maintenance',
+        impact: 'minor',
+        components: [{ monitorId: 'mon-1', status: 'degraded' }],
+      });
+      expect(result).toEqual({ content: [{ type: 'text', text: JSON.stringify(responseData, null, 2) }] });
+    });
+  });
+
+  describe('get_status_page_update', () => {
+    it('calls GET /api/v1/status-pages/{statusPageId}/updates/{updateId}', async () => {
+      const responseData = { id: 'update-1', title: 'Scheduled maintenance' };
+      mockFetch.mockResolvedValueOnce(mockResponse(responseData));
+
+      const handler = getToolHandler(server, 'get_status_page_update');
+      const result = await handler({ statusPageId: 'sp-1', updateId: 'update-1' });
+
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+      const [url] = mockFetch.mock.calls[0];
+      expect(url).toBe('https://api.example.com/api/v1/status-pages/sp-1/updates/update-1');
+      expect(result).toEqual({ content: [{ type: 'text', text: JSON.stringify(responseData, null, 2) }] });
+    });
+  });
+
+  describe('update_status_page_update', () => {
+    it('calls PATCH /api/v1/status-pages/{statusPageId}/updates/{updateId}', async () => {
+      const responseData = { id: 'update-1', title: 'Updated title' };
+      mockFetch.mockResolvedValueOnce(mockResponse(responseData));
+
+      const handler = getToolHandler(server, 'update_status_page_update');
+      const result = await handler({
+        statusPageId: 'sp-1',
+        updateId: 'update-1',
+        title: 'Updated title',
+        state: 'published',
+      });
+
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+      const [url, options] = mockFetch.mock.calls[0];
+      expect(url).toBe('https://api.example.com/api/v1/status-pages/sp-1/updates/update-1');
+      expect(options.method).toBe('PATCH');
+      expect(JSON.parse(options.body)).toEqual({ title: 'Updated title', state: 'published' });
+      expect(result).toEqual({ content: [{ type: 'text', text: JSON.stringify(responseData, null, 2) }] });
+    });
+  });
+
+  describe('delete_status_page_update', () => {
+    it('calls DELETE /api/v1/status-pages/{statusPageId}/updates/{updateId}', async () => {
+      mockFetch.mockResolvedValueOnce(mockEmpty());
+
+      const handler = getToolHandler(server, 'delete_status_page_update');
+      const result = await handler({ statusPageId: 'sp-1', updateId: 'update-1' });
+
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+      const [url, options] = mockFetch.mock.calls[0];
+      expect(url).toBe('https://api.example.com/api/v1/status-pages/sp-1/updates/update-1');
+      expect(options.method).toBe('DELETE');
+      expect(result).toEqual({ content: [{ type: 'text', text: '' }] });
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // Management maintenance/updates (distinct from the public-facing tools above —
+  //     same-looking path, different {statusPageId} vs {id} param and auth)
+  // -------------------------------------------------------------------------
+
+  describe('list_management_maintenance', () => {
+    it('calls GET /api/v1/status-pages/{statusPageId}/maintenance', async () => {
+      const responseData = [{ id: 'maint-1', title: 'Scheduled downtime' }];
+      mockFetch.mockResolvedValueOnce(mockResponse(responseData));
+
+      const handler = getToolHandler(server, 'list_management_maintenance');
+      const result = await handler({ statusPageId: 'sp-1', status: 'scheduled', page: '1', limit: '20' });
+
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+      const [url] = mockFetch.mock.calls[0];
+      expect(url).toContain('/api/v1/status-pages/sp-1/maintenance');
+      expect(url).toContain('status=scheduled');
+      expect(url).toContain('page=1');
+      expect(url).toContain('limit=20');
+      expect(result).toEqual({ content: [{ type: 'text', text: JSON.stringify(responseData, null, 2) }] });
+    });
+  });
+
+  describe('get_management_maintenance', () => {
+    it('calls GET /api/v1/status-pages/{statusPageId}/maintenance/{maintenanceId}', async () => {
+      const responseData = { id: 'maint-1', title: 'Scheduled downtime' };
+      mockFetch.mockResolvedValueOnce(mockResponse(responseData));
+
+      const handler = getToolHandler(server, 'get_management_maintenance');
+      const result = await handler({ statusPageId: 'sp-1', maintenanceId: 'maint-1' });
+
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+      const [url] = mockFetch.mock.calls[0];
+      expect(url).toBe('https://api.example.com/api/v1/status-pages/sp-1/maintenance/maint-1');
+      expect(result).toEqual({ content: [{ type: 'text', text: JSON.stringify(responseData, null, 2) }] });
+    });
+  });
+
+  describe('list_management_status_page_updates', () => {
+    it('calls GET /api/v1/status-pages/{statusPageId}/updates', async () => {
+      const responseData = [{ id: 'update-1', title: 'Scheduled maintenance' }];
+      mockFetch.mockResolvedValueOnce(mockResponse(responseData));
+
+      const handler = getToolHandler(server, 'list_management_status_page_updates');
+      const result = await handler({ statusPageId: 'sp-1', state: 'published', page: '1', limit: '20' });
+
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+      const [url] = mockFetch.mock.calls[0];
+      expect(url).toContain('/api/v1/status-pages/sp-1/updates');
+      expect(url).toContain('state=published');
+      expect(url).toContain('page=1');
+      expect(url).toContain('limit=20');
       expect(result).toEqual({ content: [{ type: 'text', text: JSON.stringify(responseData, null, 2) }] });
     });
   });
