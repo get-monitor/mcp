@@ -3,13 +3,23 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { GetMonitorClient } from '../../client/api-client.js';
 import { registerProjectTools } from '../../tools/projects.js';
 
+// Helper to create a mock fetch response
 function mockResponse(data: unknown, status = 200) {
-  return { ok: true, status, headers: new Map([['content-length', '100']]), json: async () => data };
+  return {
+    ok: true,
+    status,
+    headers: new Map([['content-length', '100']]),
+    json: async () => data,
+  };
 }
 
+// Helper to find a registered tool handler by name
 function getToolHandler(server: McpServer, toolName: string) {
+  // Access internal tool registry via the registered tools
   const tools = (server as unknown as { _registeredTools: Record<string, { handler: (args: unknown) => unknown }> })._registeredTools;
-  if (!tools || !tools[toolName]) throw new Error(`Tool "${toolName}" not found in server`);
+  if (!tools || !tools[toolName]) {
+    throw new Error(`Tool "${toolName}" not found in server`);
+  }
   return tools[toolName].handler;
 }
 
