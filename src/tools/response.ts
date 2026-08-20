@@ -56,7 +56,7 @@ export function registerResponseTools(server: McpServer, client: GetMonitorClien
 
   server.tool(
     'get_incident',
-    'Get details of a specific response incident.',
+    'Get details about a specific response incident.',
     {
       id: z.string().describe('The incident ID'),
     },

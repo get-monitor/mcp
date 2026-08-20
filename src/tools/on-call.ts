@@ -171,9 +171,9 @@ export function registerOnCallTools(server: McpServer, client: GetMonitorClient)
     'delete_schedule_override',
     'Delete an on-call schedule override.',
     {
-      oid: z.string().describe('The schedule override ID'),
+      overrideId: z.string().describe('The schedule override ID'),
     },
-    ({ oid }) => callApi(() => client.delete(`/api/v1/on-call/schedules/overrides/${oid}`)),
+    ({ overrideId }) => callApi(() => client.delete(`/api/v1/on-call/schedules/overrides/${overrideId}`)),
   );
 
   server.tool(
@@ -217,7 +217,7 @@ export function registerOnCallTools(server: McpServer, client: GetMonitorClient)
 
   server.tool(
     'get_oncall_schedule',
-    'Get details of a specific on-call schedule.',
+    'Get details about a specific on-call schedule.',
     {
       id: z.string().describe('The on-call schedule ID'),
     },

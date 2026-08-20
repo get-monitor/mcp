@@ -338,11 +338,11 @@ describe('On-Call Tools', () => {
   // ─── Schedules ────────────────────────────────────────────────────────────
 
   describe('delete_schedule_override', () => {
-    it('calls DELETE /api/v1/on-call/schedules/overrides/{oid}', async () => {
+    it('calls DELETE /api/v1/on-call/schedules/overrides/{overrideId}', async () => {
       mockFetch.mockResolvedValueOnce(mockEmpty());
 
       const handler = getToolHandler(server, 'delete_schedule_override');
-      const result = await handler({ oid: 'override-1' });
+      const result = await handler({ overrideId: 'override-1' });
 
       expect(mockFetch).toHaveBeenCalledTimes(1);
       const [url, options] = mockFetch.mock.calls[0];
