@@ -1,4 +1,5 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import packageJson from '../package.json' with { type: 'json' };
 import type { GetMonitorClient } from './client/api-client.js';
 import { registerOrganizationTools } from './tools/organizations.js';
 import { registerUptimeTools } from './tools/uptime.js';
@@ -16,7 +17,7 @@ import { registerMemberTools } from './tools/members.js';
 export function createServer(client: GetMonitorClient): McpServer {
   const server = new McpServer({
     name: 'GetMonitor',
-    version: '0.3.0',
+    version: packageJson.version,
   });
   registerOrganizationTools(server, client);
   registerUptimeTools(server, client);

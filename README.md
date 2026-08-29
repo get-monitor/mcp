@@ -185,3 +185,11 @@ Public subscription management for status page updates, plus billing plan inform
 - _"Install the Slack integration and configure it to notify our #incidents channel"_
 - _"List all monitors and their current status across my organization"_
 - _"Create a maintenance window for next Tuesday and update subscribers"_
+
+## Releasing
+
+Versioning and changelogs are managed with [Changesets](https://changesets.dev).
+
+1. On any PR with a user-facing change, run `pnpm changeset` and follow the prompts to describe the change and pick a semver bump (patch/minor/major). Commit the generated file under `.changeset/`.
+2. When ready to release, run `pnpm version-packages` to consume all pending changesets, bump the version in `package.json`, and update `CHANGELOG.md`. Commit the result.
+3. Run `pnpm build`, then `npm publish`, then push a matching git tag (e.g. `vX.Y.Z`).
