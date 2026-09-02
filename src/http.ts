@@ -31,6 +31,7 @@ export function pickOrganizationId(
 interface HttpAppOptions {
   apiUrl: string;
   appUrl: string;
+  accountsUrl: string;
 }
 
 // In-memory stores — replace with Redis in production
@@ -205,9 +206,11 @@ export function createHttpApp(opts: HttpAppOptions): express.Express {
       tokenStore.delete(bearer); // evict stale entry eagerly
     }
 
-    // Path 2: Raw Better Auth session token (AI service → MCP)
+    // Path 2: Raw accounts session token (AI service → MCP). Validated
+    // against accounts, not api — api's own better-auth instance is no
+    // longer the credential source api's guard accepts post-cutover.
     try {
-      const sessionResp = await fetch(`${opts.apiUrl}/api/auth/get-session`, {
+      const sessionResp = await fetch(`${opts.accountsUrl}/api/auth/get-session`, {
         headers: { Authorization: `Bearer ${bearer}` },
       });
       if (sessionResp.ok) {
@@ -293,6 +296,7 @@ if (process.argv[1] === new URL(import.meta.url).pathname) {
   const app = createHttpApp({
     apiUrl: process.env.GETMONITOR_API_URL ?? "https://api.getmonitor.io",
     appUrl: process.env.GETMONITOR_APP_URL ?? "https://console.getmonitor.io",
+    accountsUrl: process.env.GETMONITOR_ACCOUNTS_URL ?? "https://accounts.getmonitor.io",
   });
   app.listen(PORT, () =>
     console.log(`[GetMonitor MCP Full] HTTP server on :${PORT}`),

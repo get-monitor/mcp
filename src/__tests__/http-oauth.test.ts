@@ -5,7 +5,11 @@ import { createHttpApp } from '../http.js';
 const fetchSpy = vi.spyOn(globalThis, 'fetch');
 
 describe('HTTP transport OAuth', () => {
-  const app = createHttpApp({ apiUrl: 'https://api.getmonitor.io', appUrl: 'https://console.getmonitor.io' });
+  const app = createHttpApp({
+    apiUrl: 'https://api.getmonitor.io',
+    appUrl: 'https://console.getmonitor.io',
+    accountsUrl: 'https://accounts.getmonitor.io',
+  });
 
   afterEach(() => fetchSpy.mockReset());
 

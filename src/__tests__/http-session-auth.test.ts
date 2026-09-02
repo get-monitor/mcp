@@ -5,7 +5,11 @@ import { createHttpApp } from '../http.js';
 const fetchSpy = vi.spyOn(globalThis, 'fetch');
 
 describe('HTTP auth — session token fallback', () => {
-  const app = createHttpApp({ apiUrl: 'http://api.test', appUrl: 'http://app.test' });
+  const app = createHttpApp({
+    apiUrl: 'http://api.test',
+    appUrl: 'http://app.test',
+    accountsUrl: 'http://accounts.test',
+  });
 
   afterEach(() => fetchSpy.mockReset());
 
@@ -33,5 +37,9 @@ describe('HTTP auth — session token fallback', () => {
       .set('Content-Type', 'application/json')
       .send({ jsonrpc: '2.0', id: 1, method: 'initialize', params: { protocolVersion: '2024-11-05', capabilities: {}, clientInfo: { name: 'test', version: '1' } } });
     expect(res.status).not.toBe(401);
+    expect(fetchSpy).toHaveBeenCalledWith(
+      'http://accounts.test/api/auth/get-session',
+      expect.objectContaining({ headers: { Authorization: 'Bearer sess-tok' } }),
+    );
   });
 });
