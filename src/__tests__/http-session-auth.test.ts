@@ -30,6 +30,21 @@ describe('HTTP auth — session token fallback', () => {
         headers: { 'Content-Type': 'application/json' },
       })
     );
+    // JWT exchange call (see http-jwt-exchange.test.ts for dedicated coverage)
+    fetchSpy.mockResolvedValueOnce(
+      new Response(JSON.stringify({ token: 'the-jwt' }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
+    // tempClient's GET /api/v1/organizations — wrapped in try/catch by the
+    // handler, but mocked explicitly to keep this test hermetic (no real fetch)
+    fetchSpy.mockResolvedValueOnce(
+      new Response(JSON.stringify([]), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    );
     // Will fail at MCP protocol level, not auth level — that's fine for this test
     const res = await request(app)
       .post('/mcp')

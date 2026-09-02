@@ -28,6 +28,19 @@ export function pickOrganizationId(
   return orgs[0]?.id;
 }
 
+async function exchangeForJwt(accountsUrl: string, sessionToken: string): Promise<string | null> {
+  try {
+    const res = await fetch(`${accountsUrl}/api/auth/token`, {
+      headers: { Authorization: `Bearer ${sessionToken}` },
+    });
+    if (!res.ok) return null;
+    const data = (await res.json()) as { token?: string };
+    return data.token ?? null;
+  } catch {
+    return null;
+  }
+}
+
 interface HttpAppOptions {
   apiUrl: string;
   appUrl: string;
@@ -245,8 +258,13 @@ export function createHttpApp(opts: HttpAppOptions): express.Express {
     // New session
     const sessionToken = (req as unknown as Record<string, unknown>)
       .sessionToken as string;
+    const jwt = await exchangeForJwt(opts.accountsUrl, sessionToken);
+    if (!jwt) {
+      res.status(401).json({ error: "invalid_token", error_description: "Could not exchange session for an access token" });
+      return;
+    }
     const requestedOrganizationId = req.headers["x-organization-id"] as string | undefined;
-    const tempClient = new GetMonitorClient({ baseUrl: opts.apiUrl, token: sessionToken });
+    const tempClient = new GetMonitorClient({ baseUrl: opts.apiUrl, token: jwt });
     let organizationId: string | undefined;
     try {
       const orgs = await tempClient.get<Array<{ id: string }>>('/api/v1/organizations');
@@ -256,7 +274,7 @@ export function createHttpApp(opts: HttpAppOptions): express.Express {
     }
     const apiClient = new GetMonitorClient({
       baseUrl: opts.apiUrl,
-      token: sessionToken,
+      token: jwt,
       organizationId,
     });
     const mcpServer = createServer(apiClient);
