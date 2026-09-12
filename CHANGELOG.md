@@ -1,5 +1,11 @@
 # @getmonitor/mcp
 
+## 0.3.2
+
+### Patch Changes
+
+- Fix session token authentication against accounts. Path 2 session tokens are now validated against `accounts` instead of `api`, and are exchanged for an accounts-issued JWT before being used as the Bearer credential on `api` calls, since `api`'s AccountsOrgGuard rejects raw session tokens. Also corrects `accountsUrl` to point at the correct API endpoint.
+
 ## 0.3.1
 
 ### Patch Changes
