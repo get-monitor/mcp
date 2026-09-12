@@ -8,7 +8,7 @@ describe('HTTP transport OAuth', () => {
   const app = createHttpApp({
     apiUrl: 'https://api.getmonitor.io',
     appUrl: 'https://console.getmonitor.io',
-    accountsUrl: 'https://accounts.getmonitor.io',
+    accountsUrl: 'https://accounts.api.getmonitor.io',
   });
 
   afterEach(() => fetchSpy.mockReset());

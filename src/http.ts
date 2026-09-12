@@ -314,7 +314,7 @@ if (process.argv[1] === new URL(import.meta.url).pathname) {
   const app = createHttpApp({
     apiUrl: process.env.GETMONITOR_API_URL ?? "https://api.getmonitor.io",
     appUrl: process.env.GETMONITOR_APP_URL ?? "https://console.getmonitor.io",
-    accountsUrl: process.env.GETMONITOR_ACCOUNTS_URL ?? "https://accounts.getmonitor.io",
+    accountsUrl: process.env.GETMONITOR_ACCOUNTS_URL ?? "https://accounts.api.getmonitor.io",
   });
   app.listen(PORT, () =>
     console.log(`[GetMonitor MCP Full] HTTP server on :${PORT}`),
