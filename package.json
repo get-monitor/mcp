@@ -12,6 +12,7 @@
   ],
   "scripts": {
     "build": "tsup",
+    "start": "node dist/http.js",
     "dev:stdio": "tsx src/stdio.ts",
     "dev:http": "tsx src/http.ts",
     "test": "vitest run",
